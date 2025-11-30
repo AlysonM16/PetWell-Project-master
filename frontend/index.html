@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthGraph - Medical Data Visualization</title>
+    <link rel="stylesheet" href="/static/style.css?v=1">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+</head>
+<body>
+    <div class="container">
+        <h1>HealthGraph 🩺</h1>
+        <p>Upload your medical lab reports to visualize your health metrics over time</p>
+        
+        <div class="upload-section">
+            <input type="file" id="pdfUploader" accept=".pdf">
+            <button id="processBtn">Start Processing</button>
+        </div>
+        
+        <div id="statusMessage"></div>
+        <div id="timerDisplay">Extraction time: <span id="timerValue">0.00</span> seconds</div>
+        
+        <div id="chartContainer" class="chart-container">
+            <!-- Plotly chart will be rendered here -->
+        </div>
+
+
+        <button id="exportCsvBtn" style="margin-bottom: 10px; display: none;">Export Data to CSV</button>
+        <h2>Extracted Data Table</h2>
+        <table id="data-table" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Unit</th>
+                    <th>Reference Range</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be loaded here by DataTables -->
+            </tbody>
+        </table>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="/static/app.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+    "sqltools.connections": [
+        {
+            "connectionTimeout": 15,
+            "mssqlOptions": {
+                "appName": "SQLTools",
+                "useUTC": true,
+                "encrypt": true,
+                "trustServerCertificate": false
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "10.203.88.117",
+            "port": 1433,
+            "driver": "MSSQL",
+            "name": "databasey",
+            "username": "root",
+            "password": ""
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "sql_app.db",
+            "name": "lite"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

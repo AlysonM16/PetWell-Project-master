@@ -1,0 +1,41 @@
+Project: HealthGraph
+
+Core Features:
+- PDF file upload via web interface
+- Medical data extraction using Google Gemini API
+- Structured JSON output of medical test results
+- Interactive Plotly charts with trace controls
+- DataTables table with filtering/sorting/pagination
+- CSV export functionality
+- Performance monitoring of extraction process
+- Responsive design for all device sizes
+
+Technical Requirements:
+1. Backend:
+   - FastAPI for REST endpoints
+   - Google Gemini API integration
+   - Temporary file handling
+   - Error logging and validation
+   - Performance monitoring (timing metrics)
+
+2. Frontend:
+   - File upload interface
+   - Plotly.js chart visualization with trace controls
+   - DataTables for tabular data display
+   - CSV export functionality
+   - Fully responsive design
+
+3. Documentation:
+   - Project overview with status updates
+   - Technical specifications
+   - User guide
+
+Performance Targets:
+- PDF extraction time < 5 minutes
+- API response time < 10 seconds
+- Support PDFs up to 10MB
+
+Security Requirements:
+- API key management via environment variables
+- Temporary file cleanup
+- Input validation
