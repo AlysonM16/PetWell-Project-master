@@ -1,6 +1,7 @@
 // src/screens/dashboard.js
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Animated, Easing } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../AuthContext";
@@ -80,7 +81,7 @@ export default function DashboardScreen() {
 
       {/* Pets Section */}
       <View style={styles.petsSection}>
-        <Text style={styles.sectionTitle}>Your Pets:</Text>
+        <Text style={styles.sectionTitle}>Your Pet’s:</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
 
@@ -88,7 +89,7 @@ export default function DashboardScreen() {
           <TouchableOpacity
             onPress={() => navigation.navigate("PetProfile")}
             activeOpacity={0.8}
->
+          >
             <View style={styles.petCard}>
               <Image
                 source={{ uri: "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg" }}
@@ -96,7 +97,7 @@ export default function DashboardScreen() {
               />
               <Text style={styles.petName}>Simba</Text>
               <Text style={styles.petAge}>Age: 4</Text>
-              <Text style={styles.petBirthday}>Birthday Countdown: 10 days</Text>
+              <Text style={styles.petBirthday}>Birthday Countdown: 10 days 🎂</Text>
 
               <Text style={styles.healthTitle}>Health Summary</Text>
               <Image
@@ -119,7 +120,7 @@ export default function DashboardScreen() {
           <TouchableOpacity
             onPress={() => navigation.navigate("PetProfile")}
             activeOpacity={0.8}
->
+          >
             <View style={styles.petCard}>
               <Image
                 source={{ uri: "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg" }}
@@ -127,7 +128,7 @@ export default function DashboardScreen() {
               />
               <Text style={styles.petName}>Jojo</Text>
               <Text style={styles.petAge}>Age: 2</Text>
-              <Text style={styles.petBirthday}>Birthday Countdown: 20 days</Text>
+              <Text style={styles.petBirthday}>Birthday Countdown: 20 days 🎂</Text>
 
               <Text style={styles.healthTitle}>Health Summary</Text>
               <Image
