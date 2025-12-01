@@ -1,133 +1,162 @@
-// EditPetProfile.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
   ScrollView,
-  Alert,
-  Platform,
-  KeyboardAvoidingView,
+  Image,
+  ActivityIndicator,
 } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useAuth } from "../AuthContext";
+import api from "../api";
+import * as ImagePicker from "expo-image-picker";
 
-export default function EditPetProfileScreen({ navigation }) {
-  const [petName, setPetName] = useState("");
-  const [dob, setDob] = useState("");
-  const [breed, setBreed] = useState("");
-  const [vet, setVet] = useState("");
-  const [microchip, setMicrochip] = useState("");
+export default function EditPetProfile() {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { petId } = route.params;
+  const { accessToken } = useAuth();
 
-  const handleSave = () => Alert.alert("Saved", "Pet profile updated");
-  const handleDeactivate = () => {
-    Alert.alert("Deactivate Pet", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Deactivate", style: "destructive" },
-    ]);
+  const [pet, setPet] = useState(null);
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [imageUri, setImageUri] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchPet = async () => {
+      try {
+        const res = await api.get(`/pets/${petId}`);
+        setPet(res.data);
+        setName(res.data.name);
+        setAge(res.data.age?.toString());
+        setImageUri(res.data.image);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPet();
+  }, [petId]);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+    if (!result.cancelled) setImageUri(result.uri);
   };
 
+  const handleSave = async () => {
+    if (!name || !age) return alert("Please enter pet name and age.");
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("age", age);
+
+      if (imageUri && imageUri !== pet.image) {
+        const filename = imageUri.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append("image", { uri: imageUri, name: filename, type });
+      }
+
+      await api.put(`/pets/${petId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert("Pet updated successfully!");
+      navigation.goBack();
+    } catch (err) {
+      console.log(err);
+      alert("Error updating pet.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0B4F6C" />
+      </View>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#ffffffff" }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack && navigation.goBack()}
-          >
-            <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Edit Pet Profile</Text>
 
-          <Text style={styles.headerTitle}>Edit Pet</Text>
+      <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.petImage} />
+        ) : (
+          <Text style={styles.pickText}>Pick an Image</Text>
+        )}
+      </TouchableOpacity>
 
-          <View style={styles.headerArc} />
+      <TextInput
+        style={styles.input}
+        placeholder="Pet Name"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Age"
+        value={age}
+        onChangeText={setAge}
+        keyboardType="numeric"
+      />
 
-          {/* Pet Image */}
-          <View style={styles.petWrapper}>
-            <Image
-              source={{
-                uri: "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg",
-              }}
-              style={styles.petImage}
-            />
-            <TouchableOpacity style={styles.editIcon}>
-              <Text style={{ fontWeight: "700" }}>✎</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.petType}>Dog</Text>
-        </View>
-
-        {/* FORM */}
-        <View style={styles.form}>
-          <Text style={styles.label}>Pet's Name</Text>
-          <TextInput
-            style={styles.input}
-            value={petName}
-            onChangeText={setPetName}
-            placeholder="Name"
-            placeholderTextColor="#9ca3af"
-          />
-
-          <Text style={styles.label}>Date of Birth</Text>
-          <TextInput
-            style={styles.input}
-            value={dob}
-            onChangeText={setDob}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor="#9ca3af"
-          />
-
-          <Text style={styles.label}>Breed</Text>
-          <TextInput
-            style={styles.input}
-            value={breed}
-            onChangeText={setBreed}
-            placeholder="Breed"
-            placeholderTextColor="#9ca3af"
-          />
-
-          <Text style={styles.label}>Primary Vet</Text>
-          <View style={styles.inputWithIcon}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={[styles.input, { paddingLeft: 34 }]}
-              value={vet}
-              onChangeText={setVet}
-              placeholder="Search or enter vet name"
-              placeholderTextColor="#9ca3af"
-            />
-          </View>
-
-          <Text style={styles.label}>Microchip ID</Text>
-          <TextInput
-            style={styles.input}
-            value={microchip}
-            onChangeText={setMicrochip}
-            placeholder="ID"
-            placeholderTextColor="#9ca3af"
-          />
-
-          {/* Buttons */}
-          <View style={styles.buttonsRow}>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleDeactivate}>
-              <Text style={styles.deactivateText}>Deactivate</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <TouchableOpacity style={styles.button} onPress={handleSave} disabled={saving}>
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save Changes</Text>}
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  button: {
+    backgroundColor: "#0B4F6C",
+    padding: 15,
+    borderRadius: 15,
+    alignItems: "center",
+  },
+  buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  imagePicker: {
+    height: 150,
+    width: 150,
+    backgroundColor: "#eee",
+    borderRadius: 75,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  petImage: { width: 150, height: 150, borderRadius: 75 },
+  pickText: { color: "#666" },
+});
+
+/*
 const styles = StyleSheet.create({
   header: {
     paddingTop: 12,
@@ -241,3 +270,4 @@ const styles = StyleSheet.create({
   saveText: { color: "#ffffff", fontWeight: "700" },
   deactivateText: { color: "#B91C1C", fontWeight: "600" },
 });
+*/

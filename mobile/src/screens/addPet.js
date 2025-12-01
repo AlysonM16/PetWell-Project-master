@@ -1,174 +1,130 @@
-// screens/addPet.js
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
+  StyleSheet,
   ScrollView,
+  Image,
+  ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../AuthContext";
+import api from "../api";
+import * as ImagePicker from "expo-image-picker";
 
-export default function AddPetScreen() {
+export default function AddPet() {
   const navigation = useNavigation();
-  const [petName, setPetName] = useState("");
-  const [dob, setDob] = useState("");
-  const [breed, setBreed] = useState("");
-  const [notes, setNotes] = useState("");
+  const { accessToken } = useAuth();
+
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [imageUri, setImageUri] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.cancelled) setImageUri(result.uri);
+  };
+
+  const handleAddPet = async () => {
+    if (!name || !age) return alert("Please enter pet name and age.");
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("age", age);
+
+      if (imageUri) {
+        const filename = imageUri.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append("image", { uri: imageUri, name: filename, type });
+      }
+
+      await api.post("/pets", formData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert("Pet added successfully!");
+      navigation.goBack();
+    } catch (err) {
+      console.log(err);
+      alert("Error adding pet.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={styles.screenWrapper}>
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.closeText}>X</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Add New Pet</Text>
+
+      <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.petImage} />
+        ) : (
+          <Text style={styles.pickText}>Pick an Image</Text>
+        )}
       </TouchableOpacity>
-      <View style={styles.curvedBackground} />
-      <View style={styles.card}>
-        <Text style={styles.title}>Add Pet</Text>
-        <MaterialCommunityIcons name="dog" size={50} color="#0B4F6C" />
-        <Text style={styles.label}>Pet’s Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder=""
-          value={petName}
-          onChangeText={setPetName}
-        />
-        <Text style={styles.label}>Pet’s Date of Birth</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="mm/dd/yyyy"
-          value={dob}
-          onChangeText={setDob}
-        />
-        <Text style={styles.label}>Breed</Text>
-        <TouchableOpacity style={styles.dropdown}>
-          <Text style={styles.dropdownText}>
-            {breed ? breed : "Select Breed"}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.label}>Additional Notes</Text>
-        <TextInput
-          style={[styles.input, { height: 60 }]}
-          multiline
-          value={notes}
-          onChangeText={setNotes}
-        />
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>Add</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Pet Name"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Age"
+        value={age}
+        onChangeText={setAge}
+        keyboardType="numeric"
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleAddPet} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Add Pet</Text>}
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screenWrapper: {
-    flex: 1,
-    backgroundColor: "#ffffffff",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 40,
-  },
-
-  closeButton: {
-    position: "absolute",
-    top: 40,
-    right: 25,
-    zIndex: 20,
-    backgroundColor: "#0B4F6C",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-
-  closeText: {
-    color: "#ffff",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
-
-  curvedBackground: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    height: 425,
-    backgroundColor: "#B4BD00",
-    borderBottomLeftRadius: 100,
-    borderBottomRightRadius: 100,
-  },
-
-  card: {
-    backgroundColor: "#ffffffff",
-    width: "85%",
-    borderRadius: 20,
-    padding: 25,
-    alignItems: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#B4BD00",
-    marginBottom: 10,
-  },
-
-  label: {
-    alignSelf: "flex-start",
-    color: "#0B4F6C",
-    fontWeight: "bold",
-    marginTop: 12,
-  },
-
+  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
   input: {
-    width: "100%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#0B4F6C",
-    paddingVertical: 6,
-    marginBottom: 10,
-  },
-
-  dropdown: {
-    width: "100%",
-    backgroundColor: "#fff",
-    marginTop: 5,
-    borderRadius: 12,
-    padding: 15,
-    borderColor: "#ccc",
     borderWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    elevation: 2,
-    marginBottom: 10,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
   },
-
-  dropdownText: {
-    color: "#777",
-  },
-
-  addButton: {
+  button: {
     backgroundColor: "#0B4F6C",
-    width: "60%",
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 20,
+    padding: 15,
+    borderRadius: 15,
+    alignItems: "center",
   },
-
-  addButtonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 16,
+  buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  imagePicker: {
+    height: 150,
+    width: 150,
+    backgroundColor: "#eee",
+    borderRadius: 75,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginBottom: 20,
   },
+  petImage: { width: 150, height: 150, borderRadius: 75 },
+  pickText: { color: "#666" },
 });

@@ -1,10 +1,19 @@
-// src/screens/dashboard.js
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Animated, Easing } from "react-native";
-
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Animated,
+  Easing,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../AuthContext";
+import api from "../api";
 
 function deriveDisplayName(user) {
   if (!user) return "Full Name";
@@ -24,12 +33,30 @@ function deriveDisplayName(user) {
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const [userName, setUserName] = useState("Full Name");
+  const [pets, setPets] = useState([]);
+  const [loadingPets, setLoadingPets] = useState(true);
 
   useEffect(() => {
     setUserName(deriveDisplayName(user));
   }, [user]);
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const res = await api.get("/pets", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setPets(res.data); // backend returns array of pets
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoadingPets(false);
+      }
+    };
+    if (accessToken) fetchPets();
+  }, [accessToken]);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-40)).current;
@@ -68,8 +95,6 @@ export default function DashboardScreen() {
         <View style={{ flex: 1, marginLeft: 10 }}>
           <Text style={styles.welcomeText}>Welcome back!</Text>
           <Text style={styles.userName}>{userName}</Text>
-
-          {/* Edit Profile */}
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => navigation.navigate("EditProfile")}
@@ -79,77 +104,58 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Pets Section */}
       <View style={styles.petsSection}>
         <Text style={styles.sectionTitle}>Your Pet’s:</Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-
-          {/* PET 1 */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate("PetProfile")}
-            activeOpacity={0.8}
-          >
-            <View style={styles.petCard}>
-              <Image
-                source={{ uri: "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg" }}
-                style={styles.petImage}
-              />
-              <Text style={styles.petName}>Simba</Text>
-              <Text style={styles.petAge}>Age: 4</Text>
-              <Text style={styles.petBirthday}>Birthday Countdown: 10 days 🎂</Text>
-
-              <Text style={styles.healthTitle}>Health Summary</Text>
-              <Image
-                source={{
-                  uri: "https://quickchart.io/chart?c={type:'line',data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{label:'Weight',data:[10,11,12,12,13]}]}}",
-                }}
-                style={styles.healthChart}
-              />
-
+        {loadingPets ? (
+          <ActivityIndicator size="large" color="#0B4F6C" />
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {pets.map((pet) => (
               <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => navigation.navigate("Graph")}
+                key={pet.id}
+                onPress={() =>
+                  navigation.navigate("PetProfile", { petId: pet.id })
+                }
+                activeOpacity={0.8}
               >
-                <Text style={styles.detailsText}>See Details</Text>
+                <View style={styles.petCard}>
+                  <Image
+                    source={{
+                      uri:
+                        pet.image ||
+                        "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg",
+                    }}
+                    style={styles.petImage}
+                  />
+                  <Text style={styles.petName}>{pet.name}</Text>
+                  <Text style={styles.petAge}>Age: {pet.age || "-"}</Text>
+                  <Text style={styles.petBirthday}>
+                    Birthday Countdown: {pet.birthdayCountdown || "-"} days 🎂
+                  </Text>
+
+                  <Text style={styles.healthTitle}>Health Summary</Text>
+                  <Image
+                    source={{
+                      uri:
+                        pet.chartUrl ||
+                        "https://quickchart.io/chart?c={type:'line',data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{label:'Weight',data:[0,0,0,0,0]}]}}",
+                    }}
+                    style={styles.healthChart}
+                  />
+
+                  <TouchableOpacity
+                    style={styles.detailsButton}
+                    onPress={() => navigation.navigate("Graph", { petId: pet.id })}
+                  >
+                    <Text style={styles.detailsText}>See Details</Text>
+                  </TouchableOpacity>
+                </View>
               </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
-          {/* PET 2 */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate("PetProfile")}
-            activeOpacity={0.8}
-          >
-            <View style={styles.petCard}>
-              <Image
-                source={{ uri: "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg" }}
-                style={styles.petImage}
-              />
-              <Text style={styles.petName}>Jojo</Text>
-              <Text style={styles.petAge}>Age: 2</Text>
-              <Text style={styles.petBirthday}>Birthday Countdown: 20 days 🎂</Text>
-
-              <Text style={styles.healthTitle}>Health Summary</Text>
-              <Image
-                source={{
-                  uri: "https://quickchart.io/chart?c={type:'line',data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{label:'Weight',data:[5,5.2,5.4,5.3,5.6]}]}}",
-                }}
-                style={styles.healthChart}
-              />
-
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => navigation.navigate("Graph")}
-              >
-                <Text style={styles.detailsText}>See Details</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-
-        </ScrollView>
-
-        {/* New Pet Button */}
         <TouchableOpacity
           style={styles.newPetButton}
           onPress={() => navigation.navigate("AddPet")}
@@ -186,46 +192,17 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 35,
-    borderWidth: 3,
-    borderColor: "#B9BF1D",
-    backgroundColor: "#eee",
-  },
+  avatar: { width: 80, height: 80, borderRadius: 35, borderWidth: 3, borderColor: "#B9BF1D", backgroundColor: "#eee" },
   welcomeText: { fontSize: 18, fontWeight: "bold", color: "#000" },
   userName: { fontSize: 16, color: "#333", marginBottom: 6 },
-  editButton: {
-    backgroundColor: "#0B4F6C",
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    alignSelf: "flex-start",
-  },
+  editButton: { backgroundColor: "#0B4F6C", borderRadius: 20, paddingVertical: 6, paddingHorizontal: 15, alignSelf: "flex-start" },
   editText: { color: "#fff", fontWeight: "600", fontSize: 13 },
 
   petsSection: { marginTop: 30, paddingHorizontal: 15 },
   sectionTitle: { fontSize: 20, fontWeight: "bold", color: "#000", marginBottom: 10 },
 
-  petCard: {
-    backgroundColor: "#0B4F6C",
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: "#10a8e8ff",
-    padding: 18,
-    marginRight: 18,
-    width: 230,
-  },
-  petImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 60,
-    alignSelf: "center",
-    marginBottom: 8,
-    borderWidth: 3,
-    borderColor: "#B9BF1D",
-  },
+  petCard: { backgroundColor: "#0B4F6C", borderRadius: 20, borderWidth: 2, borderColor: "#10a8e8ff", padding: 18, marginRight: 18, width: 230 },
+  petImage: { width: 100, height: 100, borderRadius: 60, alignSelf: "center", marginBottom: 8, borderWidth: 3, borderColor: "#B9BF1D" },
   petName: { fontSize: 18, fontWeight: "bold", color: "#fff", textAlign: "center" },
   petAge: { color: "#fff", textAlign: "center", marginTop: 4 },
   petBirthday: { color: "#fff", textAlign: "center", marginBottom: 15, fontSize: 13 },
@@ -234,19 +211,7 @@ const styles = StyleSheet.create({
   detailsButton: { backgroundColor: "#fff", borderRadius: 8, paddingVertical: 5, alignSelf: "center", paddingHorizontal: 20 },
   detailsText: { color: "#0B4F6C", fontWeight: "600" },
 
-  newPetButton: {
-    marginTop: 20,
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#0B4F6C",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#B9BF1D",
-  },
+  newPetButton: { marginTop: 20, alignSelf: "center", flexDirection: "row", alignItems: "center", backgroundColor: "#0B4F6C", borderRadius: 20, paddingHorizontal: 20, paddingVertical: 10, elevation: 3, borderWidth: 1, borderColor: "#B9BF1D" },
   newPetText: { color: "#fff", fontSize: 16, fontWeight: "600", marginRight: 8 },
   addIcon: { backgroundColor: "#B9BF1D", width: 28, height: 28, borderRadius: 20, alignItems: "center", justifyContent: "center" },
 });

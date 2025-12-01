@@ -1,41 +1,43 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 import os, tempfile, json
 from dotenv import load_dotenv
+from typing import List
+
+from .routers import pets
 
 from .llm_parser import extract_data_from_pdf
-from .database import Base, engine
-from . import models
+from .database import Base, engine, get_db
+from . import models, schemas
 from .routers.auth import router as auth_router
+from .routers.pets import router as pets_router
 from .security import get_current_user
-from .schemas import UserOut
-from .models import User
 
 load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(title="Pet Management API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Include auth router (login/register/etc)
 app.include_router(auth_router)
-
+app.include_router(pets_router)
+# Root
 @app.get("/")
 async def read_root():
     return {"message": "Hello from FastAPI"}
 
-#@app.get("/me")
-#def me(user: User = Depends(get_current_user)):
- #   return {"id": user.id, "email": user.email}
-
+# PDF processing
 @app.post("/process-pdf")
 async def process_pdf(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
@@ -54,10 +56,53 @@ async def process_pdf(file: UploadFile = File(...)):
         extracted_data = extract_data_from_pdf(temp_file_path)
         return JSONResponse(status_code=200, content=extracted_data)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Failed to decode JSON from the LLM response.")
+        raise HTTPException(status_code=500, detail="Failed to decode JSON from LLM response.")
     except Exception as e:
         print(f"Error processing PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+# ------------------ Pets Router ------------------
+pets_router = APIRouter(prefix="/pets", tags=["pets"])
+
+@pets_router.post("/", response_model=schemas.PetOut)
+def add_pet(
+    pet: schemas.PetCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return pets.create_pet(db, owner_id=current_user.id, pet=pet)
+
+@pets_router.get("/", response_model=List[schemas.PetOut])
+def list_pets(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return pets.get_pets(db, owner_id=current_user.id)
+
+@pets_router.get("/{pet_id}", response_model=schemas.PetOut)
+def get_pet(
+    pet_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    pet = pets.get_pet(db, pet_id)
+    if not pet or pet.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Pet not found")
+    return pet
+
+@pets_router.put("/{pet_id}", response_model=schemas.PetOut)
+def update_pet(
+    pet_id: int,
+    pet_data: schemas.PetUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    pet = pets.update_pet(db, pet_id, pet_data)
+    if not pet or pet.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Pet not found or not authorized")
+    return pet
+
+

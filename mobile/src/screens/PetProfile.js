@@ -1,186 +1,117 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
-  Image,
   Text,
-  ScrollView,
-  StyleSheet,
+  Image,
   TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import api from "../api";
+import { useAuth } from "../AuthContext";
 
-export default function PetProfileScreen({ navigation }) {
-  const dog = {
-    name: "Dog C.",
-    breed: "Siberian Husky",
-    sex: "Female",
-    dob: "10/25/2022 (3)",
-    weight: "50.4 lbs",
-    image: {
-      uri: "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg",
-    },
-  };
+export default function PetProfile() {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { petId } = route.params;
+  const { accessToken } = useAuth();
+
+  const [pet, setPet] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPet = async () => {
+      try {
+        const res = await api.get(`/pets/${petId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setPet(res.data);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (accessToken) fetchPet();
+  }, [petId, accessToken]);
+
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#0B4F6C" />
+      </View>
+    );
+  }
+
+  if (!pet) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Text style={{ color: "#333" }}>Pet not found.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerArc} />
+        <Image
+          source={{ uri: pet.image || "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg" }}
+          style={styles.avatar}
+        />
+        <Text style={styles.petName}>{pet.name}</Text>
+        <Text style={styles.petAge}>Age: {pet.age || "-"}</Text>
+        <Text style={styles.petBirthday}>
+          Birthday Countdown: {pet.birthdayCountdown || "-"} days 🎂
+        </Text>
 
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => navigation.navigate("EditPetProfile", { petId })}
+          >
+            <Text style={styles.editText}>Edit Pet</Text>
+          </TouchableOpacity>
 
-        <Text style={styles.title}>{dog.name}</Text>
-        <View style={{ width: 30 }} />
+          <TouchableOpacity
+            style={styles.graphButton}
+            onPress={() => navigation.navigate("Graph", { petId })}
+          >
+            <Text style={styles.graphText}>View Graph</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Dog Image */}
-      <View style={styles.imageContainer}>
-        <Image source={dog.image} style={styles.image} />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Health Summary</Text>
+        <Image
+          source={{
+            uri: pet.chartUrl || "https://quickchart.io/chart?c={type:'line',data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{label:'Weight',data:[0,0,0,0,0]}]}}",
+          }}
+          style={styles.healthChart}
+        />
       </View>
 
-      {/* Info Card */}
-      <ScrollView contentContainerStyle={styles.infoContainer}>
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Dog&apos;s Information</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("EditPetProfile")}
-            >
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Breed</Text>
-            <Text style={styles.value}>{dog.breed}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Sex</Text>
-            <Text style={styles.value}>{dog.sex}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Date of Birth</Text>
-            <Text style={styles.value}>{dog.dob}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Weight</Text>
-            <Text style={styles.value}>{dog.weight}</Text>
-          </View>
-        </View>
-
-        {/* Lab Records Section */}
-        <TouchableOpacity
-          style={styles.labSection}
-          onPress={() => navigation.navigate("Graph")}
-        >
-          <Text style={styles.labTitle}>Lab Records Graph</Text>
-          <Ionicons name="arrow-forward" size={20} color="#000" />
-        </TouchableOpacity>
-
-        {/* Notes Box */}
-        <View style={styles.notesBox}>
-          <Text style={styles.notesPlaceholder}>Notes</Text>
-        </View>
-      </ScrollView>
-    </View>
+      {/* Additional pet details can go here */}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-
-  header: {
-    height: 280,
-    alignItems: "center",
-  },
-  headerArc: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: "#B9BF1D",
-    borderBottomLeftRadius: 200,
-    borderBottomRightRadius: 200,
-  },
-  backButton: {
-    position: "absolute",
-    left: 17,
-    top: 50,
-    backgroundColor: "#0B4F6C",
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 13,
-    zIndex: 10,
-  },
-  title: {
-    marginTop: 60,
-    backgroundColor: "#ffffff",
-    paddingVertical: 5,
-    paddingHorizontal: 170,
-    borderRadius: 4,
-    fontWeight: "700",
-    fontSize: 18,
-    zIndex: 5,
-  },
-
-  imageContainer: { alignItems: "center", marginTop: -150 },
-  image: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: "orange",
-  },
-
-  infoContainer: { alignItems: "center", padding: 20 },
-  card: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 15,
-    width: "100%",
-    padding: 15,
-    elevation: 4,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  cardTitle: { fontWeight: "600", fontSize: 16 },
-  editText: { color: "#007bff" },
-
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 6,
-  },
-  label: { color: "#555" },
-  value: { fontWeight: "500" },
-
-  labSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 20,
-    paddingHorizontal: 10,
-  },
-  labTitle: { fontWeight: "600", fontSize: 16 },
-
-  notesBox: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 10,
-  },
-  notesPlaceholder: { color: "#aaa" },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  header: { alignItems: "center", padding: 20 },
+  avatar: { width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: "#B9BF1D", marginBottom: 15 },
+  petName: { fontSize: 24, fontWeight: "bold", color: "#0B4F6C" },
+  petAge: { fontSize: 16, color: "#333", marginTop: 5 },
+  petBirthday: { fontSize: 14, color: "#666", marginTop: 2 },
+  buttonRow: { flexDirection: "row", marginTop: 15 },
+  editButton: { backgroundColor: "#0B4F6C", padding: 10, borderRadius: 20, marginRight: 10 },
+  editText: { color: "#fff", fontWeight: "600" },
+  graphButton: { backgroundColor: "#B9BF1D", padding: 10, borderRadius: 20 },
+  graphText: { color: "#fff", fontWeight: "600" },
+  section: { paddingHorizontal: 20, marginTop: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: "bold", color: "#0B4F6C", marginBottom: 10 },
+  healthChart: { width: "100%", height: 200, borderRadius: 12, backgroundColor: "#eee" },
 });
