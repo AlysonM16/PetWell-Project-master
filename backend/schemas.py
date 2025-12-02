@@ -28,17 +28,21 @@ class PetBase(BaseModel):
     name: str
     breed: Optional[str] = None
     sex: Optional[str] = None
-    dob: Optional[str] = None
-    owner_id: Optional[int] = None
+    dob: Optional[str] = None  # mm/dd/yyyy
+    img: Optional[str] = None  # optional image string
+
 
 class PetCreate(PetBase):
     pass
+
 
 class PetUpdate(BaseModel):
     name: Optional[str] = None
     breed: Optional[str] = None
     sex: Optional[str] = None
     dob: Optional[str] = None
+    img: Optional[str] = None
+
 
 class PetOut(PetBase):
     id: int

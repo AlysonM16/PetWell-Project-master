@@ -1,11 +1,12 @@
+// screens/AddPet.js
 import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   Image,
   ActivityIndicator,
 } from "react-native";
@@ -19,6 +20,8 @@ export default function AddPet() {
   const { accessToken } = useAuth();
 
   const [name, setName] = useState("");
+  const [breed, setBreed] = useState("");
+  const [sex, setSex] = useState("");
   const [age, setAge] = useState("");
   const [imageUri, setImageUri] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,13 +36,15 @@ export default function AddPet() {
   };
 
   const handleAddPet = async () => {
-    if (!name || !age) return alert("Please enter pet name and age.");
+    if (!name || !age || !breed || !sex) return alert("Please fill all fields.");
 
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("age", age);
+      formData.append("breed", breed);
+      formData.append("sex", sex);
 
       if (imageUri) {
         const filename = imageUri.split("/").pop();
@@ -69,6 +74,7 @@ export default function AddPet() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Add New Pet</Text>
 
+      {/* Image Picker */}
       <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={styles.petImage} />
@@ -77,11 +83,24 @@ export default function AddPet() {
         )}
       </TouchableOpacity>
 
+      {/* Form Inputs */}
       <TextInput
         style={styles.input}
         placeholder="Pet Name"
         value={name}
         onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Breed"
+        value={breed}
+        onChangeText={setBreed}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Sex"
+        value={sex}
+        onChangeText={setSex}
       />
       <TextInput
         style={styles.input}
@@ -91,6 +110,7 @@ export default function AddPet() {
         keyboardType="numeric"
       />
 
+      {/* Submit Button */}
       <TouchableOpacity style={styles.button} onPress={handleAddPet} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Add Pet</Text>}
       </TouchableOpacity>
@@ -100,19 +120,22 @@ export default function AddPet() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "#000" },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     padding: 12,
     borderRadius: 10,
     marginBottom: 15,
+    backgroundColor: "#fff",
+    fontSize: 16,
   },
   button: {
     backgroundColor: "#0B4F6C",
     padding: 15,
     borderRadius: 15,
     alignItems: "center",
+    marginTop: 10,
   },
   buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   imagePicker: {

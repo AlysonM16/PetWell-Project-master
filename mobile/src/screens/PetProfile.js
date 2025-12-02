@@ -1,45 +1,47 @@
-import React, { useState, useEffect } from "react";
+// screens/PetProfile.js
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   Image,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import api from "../api";
 import { useAuth } from "../AuthContext";
+import api from "../api";
 
 export default function PetProfile() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { petId } = route.params;
+  const { petId, petData } = route.params || {};
   const { accessToken } = useAuth();
 
-  const [pet, setPet] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [pet, setPet] = useState(petData || null);
+  const [loading, setLoading] = useState(!petData);
 
   useEffect(() => {
     const fetchPet = async () => {
+      if (!petId || pet) return; // Already have data
       try {
         const res = await api.get(`/pets/${petId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setPet(res.data);
       } catch (err) {
-        console.log(err);
+        console.error("Error fetching pet:", err);
       } finally {
         setLoading(false);
       }
     };
-    if (accessToken) fetchPet();
-  }, [petId, accessToken]);
+    fetchPet();
+  }, [petId, pet, accessToken]);
 
   if (loading) {
     return (
-      <View style={styles.loaderContainer}>
+      <View style={styles.loader}>
         <ActivityIndicator size="large" color="#0B4F6C" />
       </View>
     );
@@ -47,71 +49,118 @@ export default function PetProfile() {
 
   if (!pet) {
     return (
-      <View style={styles.loaderContainer}>
+      <View style={styles.loader}>
         <Text style={{ color: "#333" }}>Pet not found.</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
+      {/* Pet Avatar */}
+      <View style={styles.avatarContainer}>
         <Image
-          source={{ uri: pet.image || "https://cdn2.thedogapi.com/images/S1V3Qeq4X_1280.jpg" }}
+          source={
+            pet.image
+              ? { uri: pet.image }
+              : require("../../assets/icon.png")
+          }
           style={styles.avatar}
         />
-        <Text style={styles.petName}>{pet.name}</Text>
-        <Text style={styles.petAge}>Age: {pet.age || "-"}</Text>
-        <Text style={styles.petBirthday}>
-          Birthday Countdown: {pet.birthdayCountdown || "-"} days 🎂
-        </Text>
+      </View>
 
-        <View style={styles.buttonRow}>
+      {/* Pet Info Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Pet Information</Text>
           <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => navigation.navigate("EditPetProfile", { petId })}
+            onPress={() => navigation.navigate("EditPetProfile", { pet })}
           >
-            <Text style={styles.editText}>Edit Pet</Text>
+            <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
+        </View>
 
-          <TouchableOpacity
-            style={styles.graphButton}
-            onPress={() => navigation.navigate("Graph", { petId })}
-          >
-            <Text style={styles.graphText}>View Graph</Text>
-          </TouchableOpacity>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Name</Text>
+          <Text style={styles.value}>{pet.name || "-"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Breed</Text>
+          <Text style={styles.value}>{pet.breed || "-"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Sex</Text>
+          <Text style={styles.value}>{pet.sex || "-"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Date of Birth</Text>
+          <Text style={styles.value}>{pet.dob || "-"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Weight</Text>
+          <Text style={styles.value}>{pet.weight || "-"}</Text>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Health Summary</Text>
-        <Image
-          source={{
-            uri: pet.chartUrl || "https://quickchart.io/chart?c={type:'line',data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{label:'Weight',data:[0,0,0,0,0]}]}}",
-          }}
-          style={styles.healthChart}
-        />
-      </View>
+      {/* Graph Button */}
+      <TouchableOpacity
+        style={styles.graphButton}
+        onPress={() => navigation.navigate("Graph", { petId: pet.id })}
+      >
+        <Text style={styles.graphText}>View Lab Records</Text>
+      </TouchableOpacity>
 
-      {/* Additional pet details can go here */}
+      {/* Notes Section */}
+      <View style={styles.notesBox}>
+        <Text style={styles.notesPlaceholder}>{pet.notes || "Notes"}</Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { alignItems: "center", padding: 20 },
-  avatar: { width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: "#B9BF1D", marginBottom: 15 },
-  petName: { fontSize: 24, fontWeight: "bold", color: "#0B4F6C" },
-  petAge: { fontSize: 16, color: "#333", marginTop: 5 },
-  petBirthday: { fontSize: 14, color: "#666", marginTop: 2 },
-  buttonRow: { flexDirection: "row", marginTop: 15 },
-  editButton: { backgroundColor: "#0B4F6C", padding: 10, borderRadius: 20, marginRight: 10 },
-  editText: { color: "#fff", fontWeight: "600" },
-  graphButton: { backgroundColor: "#B9BF1D", padding: 10, borderRadius: 20 },
+
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  avatarContainer: { alignItems: "center", marginBottom: 20 },
+  avatar: { width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: "#0B4F6C" },
+
+  card: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    elevation: 3,
+  },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  cardTitle: { fontSize: 16, fontWeight: "600" },
+  editText: { color: "#007bff" },
+
+  infoRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 6 },
+  label: { color: "#555", fontWeight: "500" },
+  value: { fontWeight: "500" },
+
+  graphButton: {
+    backgroundColor: "#0B4F6C",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 20,
+  },
   graphText: { color: "#fff", fontWeight: "600" },
-  section: { paddingHorizontal: 20, marginTop: 20 },
-  sectionTitle: { fontSize: 20, fontWeight: "bold", color: "#0B4F6C", marginBottom: 10 },
-  healthChart: { width: "100%", height: 200, borderRadius: 12, backgroundColor: "#eee" },
+
+  notesBox: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 30,
+  },
+  notesPlaceholder: { color: "#aaa" },
 });

@@ -12,18 +12,18 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     token_version = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
-    pets = relationship("Pet", back_populates="owner")
+    pets = relationship("Pet", back_populates="owner") #pet id instead?
 
 
 # -------- PETS --------
 class Pet(Base):
     __tablename__ = "pets"
-
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    name = Column(String, nullable=False)
     breed = Column(String, nullable=True)
     sex = Column(String, nullable=True)
-    dob = Column(String, nullable=True)
+    dob = Column(String, nullable=False)  # keep as string MM/DD/YYYY
+    
+    img = Column(String, nullable=True)  # add this
     owner_id = Column(Integer, ForeignKey("users.id"))
-
     owner = relationship("User", back_populates="pets")

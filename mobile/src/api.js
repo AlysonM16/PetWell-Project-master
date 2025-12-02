@@ -2,36 +2,35 @@ import axios from "axios";
 import Constants from "expo-constants";
 import { getRefresh, saveRefresh, clearTokens } from "./storage";
 
-// Base URL (try to set in app.json for flexibility)
+// Base URL (from Expo constants or fallback)
 const ENV_BASE =
   (Constants?.expoConfig?.extra || {}).EXPO_PUBLIC_API_BASE_URL ||
   process.env.EXPO_PUBLIC_API_BASE_URL;
-
-// Fallback (LAN IP or tunnel)
-//const FALLBACK_BASE = "http://10.196.125.83:8000"; // change this to your backend IP
-//export const API_BASE_URL = ENV_BASE || FALLBACK_BASE;
 const API_BASE_URL = ENV_BASE || "http://10.203.90.203:8000";
 
+// Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 25000,
 });
 
+// Access token management
 let accessToken = null;
-export const setAccessToken = (t) => {
-  accessToken = t;
+export const setAccessToken = (token) => {
+  accessToken = token;
 };
 
+// Request interceptor to add auth header
 api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers = config.headers || {};
-    config.headers.Authorization = 'Bearer ${accessToken}';
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
 
+// Refresh token logic
 let refreshing = null;
-
 async function refreshAccessToken() {
   const rt = await getRefresh();
   if (!rt) return null;
@@ -44,8 +43,9 @@ async function refreshAccessToken() {
   return newAccess;
 }
 
+// Response interceptor to handle 401 and refresh
 api.interceptors.response.use(
-  (r) => r,
+  (response) => response,
   async (error) => {
     const original = error.config || {};
     if (!error.response) return Promise.reject(error);
@@ -69,4 +69,25 @@ api.interceptors.response.use(
   }
 );
 
+// --- Helper functions ---
+
+// Get all pets
+export const getPets = async () => {
+  if (!accessToken) throw new Error("No access token set");
+  const res = await api.get("/pets", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return res.data;
+};
+
+// Get pet by ID
+export const getPetById = async (id) => {
+  if (!accessToken) throw new Error("No access token set");
+  const res = await api.get(`/pets/${id}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return res.data;
+};
+
+// Export default axios instance
 export default api;
