@@ -1,11 +1,10 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 
 # -------- USERS --------
 class User(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -20,10 +19,10 @@ class Pet(Base):
     __tablename__ = "pets"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    dob = Column(String, nullable=True)  # keep as string MM/DD/YYYY
     breed = Column(String, nullable=True)
     sex = Column(String, nullable=True)
-    dob = Column(String, nullable=False)  # keep as string MM/DD/YYYY
-    
+    weight = Column(Float, nullable=True)
     img = Column(String, nullable=True)  # add this
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="pets")

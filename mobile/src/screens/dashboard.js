@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../AuthContext";
 import { getPets, setAccessToken } from "../api";
 
@@ -39,34 +39,10 @@ export default function DashboardScreen() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Set username
-  useEffect(() => {
-    setUserName(deriveDisplayName(user));
-  }, [user]);
-
-  // Set API access token
-  useEffect(() => {
-    if (accessToken) {
-      setAccessToken(accessToken);
-      loadPets();
-    }
-  }, [accessToken]);
-
-  // Load pets from backend
-  const loadPets = async () => {
-    try {
-      const data = await getPets();
-      setPets(data);
-    } catch (err) {
-      console.log("Failed to load pets:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-40)).current;
 
+  // Animate header
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -83,6 +59,38 @@ export default function DashboardScreen() {
       }),
     ]).start();
   }, []);
+
+  // Set username
+  useEffect(() => {
+    setUserName(deriveDisplayName(user));
+  }, [user]);
+
+  // Set API token and load pets
+  useEffect(() => {
+    if (accessToken) {
+      setAccessToken(accessToken);
+      loadPets();
+    }
+  }, [accessToken]);
+
+  // Refresh pets when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPets();
+    }, [])
+  );
+
+  const loadPets = async () => {
+    try {
+      setLoading(true);
+      const data = await getPets();
+      setPets(data || []);
+    } catch (err) {
+      console.log("Failed to load pets:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -140,10 +148,10 @@ export default function DashboardScreen() {
                   }}
                   style={styles.petImage}
                 />
-                <Text style={styles.petName}>{pet.name}</Text>
-                <Text style={styles.petAge}>Sex: {pet.sex}</Text>
+                <Text style={styles.petName}>{pet.name || "Unknown"}</Text>
+                <Text style={styles.petAge}>Sex: {pet.sex || "-"}</Text>
                 <Text style={styles.petBirthday}>
-                  Birthday Countdown: {pet.birthdayCountdown || "-"} days
+                  Birthday Countdown: {pet.birthdayCountdown ?? "-"} days
                 </Text>
 
                 <Text style={styles.healthTitle}>Health Summary</Text>

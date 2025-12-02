@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User, Pet
-from ..schemas import UserCreate, UserOut, TokenPair, PetOut
+from ..schemas import UserCreate, UserOut, TokenPair, UserWithPets, PetOut
 from ..security import hash_password, verify_password, make_token, parse_token, get_current_user
 from ..config import settings
 from pydantic import BaseModel
@@ -23,9 +23,7 @@ def _issue_tokens(user: User) -> TokenPair:
     )
     return TokenPair(access_token=access, refresh_token=refresh)
 
-# -------------------------------
-# Register a new user
-# -------------------------------
+# Register
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     email = payload.email.lower()
@@ -43,9 +41,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-# -------------------------------
 # Login
-# -------------------------------
 @router.post("/login", response_model=TokenPair)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     email = form.username.lower()
@@ -54,9 +50,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return _issue_tokens(user)
 
-# -------------------------------
-# Refresh token
-# -------------------------------
+# Refresh
 class RefreshIn(BaseModel):
     refresh_token: str
 
@@ -73,9 +67,7 @@ def refresh(payload: RefreshIn, db: Session = Depends(get_db)):
 
     return _issue_tokens(user)
 
-# -------------------------------
 # Logout
-# -------------------------------
 @router.post("/logout")
 def logout(payload: RefreshIn, db: Session = Depends(get_db)):
     data = parse_token(payload.refresh_token)
@@ -86,18 +78,14 @@ def logout(payload: RefreshIn, db: Session = Depends(get_db)):
             db.commit()
     return {"ok": True}
 
-# -------------------------------
 # Current user info (with pets)
-# -------------------------------
-class UserWithPets(UserOut):
-    pets: list[PetOut] = []
-
 @router.get("/me", response_model=UserWithPets)
 def read_current_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    pets = db.query(Pet).filter_by(owner_id=current_user.id).all()
+    # Convert ORM pets to PetOut
+    pets_list = [PetOut.from_orm(p) for p in current_user.pets]
     return UserWithPets(
         id=current_user.id,
         name=current_user.name,
         email=current_user.email,
-        pets=pets
+        pets=pets_list
     )

@@ -29,7 +29,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Refresh token logic
 let refreshing = null;
 async function refreshAccessToken() {
   const rt = await getRefresh();

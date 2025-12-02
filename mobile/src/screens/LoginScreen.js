@@ -5,10 +5,9 @@ import {
   Platform,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   View,
   Image,
-  ScrollView, // Added ScrollView to prevent content cutoff
+  ScrollView,
 } from "react-native";
 import {
   Text as PText,
@@ -37,14 +36,17 @@ export default function LoginScreen({ navigation }) {
       setError("Enter a valid email and a password with at least 6 characters.");
       return;
     }
-    
     setError("");
-    try {
-      await login(email.trim(), password);
-    } catch (e) {
-      const loginError = e?.response?.data?.detail || e.message || "Login failed due to an unknown error.";
-      setError(loginError);
+
+    const result = await login(email.trim(), password);
+
+    if (!result.ok) {
+      setError(result.message || "Login failed. Try again.");
+      return; // Stop here, don't navigate
     }
+
+    // Success: navigate to Dashboard
+    navigation.replace("Dashboard");
   };
 
   const canSubmit = emailValid && passValid && !loading;
@@ -54,25 +56,20 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.root}
     >
-      
-      {/* Replaced Card with a simple View with custom container styling */}
-      <ScrollView 
-        contentContainerStyle={styles.centeredContent} // Container for vertical centering
-        keyboardShouldPersistTaps="handled" // Improved keyboard handling
-        style={styles.containerWidth} // Apply width restriction to the ScrollView itself
+      <ScrollView
+        contentContainerStyle={styles.centeredContent}
+        keyboardShouldPersistTaps="handled"
+        style={styles.containerWidth}
       >
         <View style={styles.content}>
-          
-          {/* PetWell Logo Area */}
           <View style={styles.logoContainer}>
-            <Image 
-              source={PetWellLogo} 
-              style={[styles.petWellImage,{width: 200, height: 150}]}
+            <Image
+              source={PetWellLogo}
+              style={[styles.petWellImage, { width: 200, height: 150 }]}
               resizeMode="center"
             />
           </View>
 
-          {/* Login Title and Subtitle */}
           <PText variant="titleLarge" style={styles.loginTitle}>
             Login
           </PText>
@@ -80,7 +77,6 @@ export default function LoginScreen({ navigation }) {
             Let's fetch your account!
           </PText>
 
-          {/* Email Input */}
           <PText style={styles.label}>Email</PText>
           <PTextInput
             mode="flat"
@@ -97,7 +93,6 @@ export default function LoginScreen({ navigation }) {
             Enter a valid email address
           </PHelperText>
 
-          {/* Password Input */}
           <PText style={[styles.label, styles.passwordLabel]}>Password</PText>
           <PTextInput
             mode="flat"
@@ -114,14 +109,12 @@ export default function LoginScreen({ navigation }) {
             Minimum 6 characters
           </PHelperText>
 
-          {/* General Error Display */}
           {error ? <PHelperText type="error" visible>{error}</PHelperText> : null}
 
-          {/* Login Button */}
           <PButton
             mode="contained"
             onPress={onLogin}
-            disabled={!canSubmit} 
+            disabled={!canSubmit}
             loading={loading}
             style={styles.ctaButton}
             contentStyle={styles.ctaContent}
@@ -130,7 +123,6 @@ export default function LoginScreen({ navigation }) {
             Login
           </PButton>
 
-          {/* Forgot Password and Register Links */}
           <View style={styles.row}>
             <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
               <PText style={styles.linkText}>Forgot Password?</PText>
@@ -146,92 +138,21 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: "#FFFFFF", 
-  },
-  containerWidth: {
-    width: "90%",
-    maxWidth: 400,
-    alignSelf: 'center', // Center the ScrollView horizontally
-  },
-  centeredContent: {
-    flexGrow: 1, // Allows content to grow to fill space
-    justifyContent: 'center', // Centers content vertically inside the ScrollView
-    paddingVertical: 50, // Ensures content isn't flush against top/bottom edges
-  },
-  content: {
-    // This view holds the main content, replacing the Card.Content structure
-    backgroundColor: "#FFFFFF", // Added white background to match the card area
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 20,
-    shadowOpacity: 0.15,
-    shadowRadius: 3.84,
-  },
-  // --- Logo/Brand Styling ---
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  petWellImage: {
-    width: 100,
-    height: 100,
-  },
-  // --- Title/Subtitle Styling ---
-  loginTitle: {
-    fontWeight: "bold",
-    color: "#B9BF1D", 
-    marginBottom: 2,
-  },
-  loginSubtitle: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 30,
-  },
-  // --- Input & Label Styling ---
-  label: {fontSize: 14,
-    fontWeight: "bold",
-    color: "#0B4F6C", 
-    marginTop: 15, },
-  passwordLabel: {
-    marginTop: 25, 
-  },
-  input: {
-    backgroundColor: "transparent",
-    height: 40, 
-    paddingHorizontal: 0,
-    marginBottom: -4, 
-  },
-  // --- Button Styling ---
-  ctaButton: {
-    marginTop: 20, 
-    borderRadius: 0, 
-    backgroundColor: "#0B4F6C", 
-    elevation: 2,
-  },
-  ctaContent: {
-    height: 50, 
-  },
-  ctaLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffff",
-  },
-  // --- Links Styling ---
-  row: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    marginTop: 20, 
-    paddingHorizontal: 5, 
-  },
-  linkText: {
-    color: "#666", 
-    textDecorationLine: "none", 
-  },
-  registerLinkText: {
-    color: "#0D4B56", 
-    fontWeight: "bold",
-    textDecorationLine: "none", 
-  },
+  root: { flex: 1, backgroundColor: "#FFFFFF" },
+  containerWidth: { width: "90%", maxWidth: 400, alignSelf: 'center' },
+  centeredContent: { flexGrow: 1, justifyContent: 'center', paddingVertical: 50 },
+  content: { backgroundColor: "#FFFFFF", paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20, shadowOpacity: 0.15, shadowRadius: 3.84 },
+  logoContainer: { alignItems: "center", marginBottom: 30 },
+  petWellImage: { width: 100, height: 100 },
+  loginTitle: { fontWeight: "bold", color: "#B9BF1D", marginBottom: 2 },
+  loginSubtitle: { fontSize: 16, color: "#666", marginBottom: 30 },
+  label: { fontSize: 14, fontWeight: "bold", color: "#0B4F6C", marginTop: 15 },
+  passwordLabel: { marginTop: 25 },
+  input: { backgroundColor: "transparent", height: 40, paddingHorizontal: 0, marginBottom: -4 },
+  ctaButton: { marginTop: 20, borderRadius: 0, backgroundColor: "#0B4F6C", elevation: 2 },
+  ctaContent: { height: 50 },
+  ctaLabel: { fontSize: 18, fontWeight: "bold", color: "#ffff" },
+  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 20, paddingHorizontal: 5 },
+  linkText: { color: "#666", textDecorationLine: "none" },
+  registerLinkText: { color: "#0D4B56", fontWeight: "bold", textDecorationLine: "none" },
 });
