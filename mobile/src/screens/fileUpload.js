@@ -2,14 +2,15 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { useNavigation } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function FileUploadScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { petId } = route.params;
   const [uploading, setUploading] = useState(false);
-
   const pickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
@@ -34,15 +35,16 @@ export default function FileUploadScreen() {
         name: fileName,
         type: "application/pdf",
       });
+      formData.append("petId", petId);
 
       setUploading(true);
-      const backendIP = "10.203.93.9";
+      const backendIP = "192.168.1.157";
 
       const res = await axios.post(`http://${backendIP}:8000/process-pdf`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      console.log("Upload success:", JSON.stringify(res.data, null, 2));
+      console.log("Upload success!");
       Alert.alert("Success", "File uploaded successfully!");
     } catch (err) {
       console.error("Upload error:", err.message || err);
