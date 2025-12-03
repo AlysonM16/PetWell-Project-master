@@ -45,7 +45,6 @@ async def create_pet(
     db.add(pet)
     db.commit()
     db.refresh(pet)
-
     return PetOut.from_orm(pet)
 
 # LIST PETS
@@ -79,7 +78,14 @@ async def update_pet(
     if not pet:
         raise HTTPException(status_code=404, detail="Pet not found")
 
-    for field, value in {"name": name, "dob": dob, "breed": breed, "sex": sex, "weight": weight}.items():
+    # Update fields if provided
+    for field, value in {
+        "name": name,
+        "dob": dob,
+        "breed": breed,
+        "sex": sex,
+        "weight": weight,
+    }.items():
         if value is not None:
             setattr(pet, field, value)
 

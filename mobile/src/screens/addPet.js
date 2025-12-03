@@ -45,6 +45,9 @@ export default function AddPetScreen() {
     "Bulldog",
     "Poodle",
     "Labrador Retriever",
+    "Shitzu",
+    "German Shepherd",
+    "Dachshund",
   ];
   const sexes = ["Male", "Female", "Other"];
 

@@ -1,5 +1,5 @@
 // src/screens/dashboard.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -37,7 +37,8 @@ export default function DashboardScreen() {
   const { user, accessToken } = useAuth();
   const [userName, setUserName] = useState("Full Name");
   const [pets, setPets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // only for first load
+  const [refreshing, setRefreshing] = useState(false); // for background refreshes
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-40)).current;
@@ -65,34 +66,50 @@ export default function DashboardScreen() {
     setUserName(deriveDisplayName(user));
   }, [user]);
 
-  // Set API token and load pets
+  // Set API token when accessToken appears
   useEffect(() => {
     if (accessToken) {
       setAccessToken(accessToken);
-      loadPets();
+      loadPets(true); // initial load when token becomes available
     }
   }, [accessToken]);
 
-  // Refresh pets when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      loadPets();
-    }, [])
+  // Load pets helper. `fullScreen` true shows full-screen loader (first time), false is quiet refresh.
+  const loadPets = useCallback(
+    async (fullScreen = false) => {
+      try {
+        if (fullScreen) {
+          setInitialLoading(true);
+        } else {
+          setRefreshing(true);
+        }
+        const data = await getPets();
+        // normalize: backend might return image or img
+        const normalized = (data || []).map((p) => ({
+          ...p,
+          img: p.img || p.image || null,
+          chartUrl: p.chartUrl || null,
+        }));
+        setPets(normalized);
+      } catch (err) {
+        console.log("Failed to load pets:", err);
+      } finally {
+        if (fullScreen) setInitialLoading(false);
+        else setRefreshing(false);
+      }
+    },
+    [setPets]
   );
 
-  const loadPets = async () => {
-    try {
-      setLoading(true);
-      const data = await getPets();
-      setPets(data || []);
-    } catch (err) {
-      console.log("Failed to load pets:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Refresh pets when screen comes into focus (e.g., after editing/adding a pet)
+  useFocusEffect(
+    React.useCallback(() => {
+      // do a background refresh (no full-screen loader)
+      loadPets(false);
+    }, [loadPets])
+  );
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color="#0B4F6C" />
@@ -103,25 +120,16 @@ export default function DashboardScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Animated.View
-        style={[
-          styles.curvedHeader,
-          { opacity: fadeAnim, transform: [{ translateY }] },
-        ]}
+        style={[styles.curvedHeader, { opacity: fadeAnim, transform: [{ translateY }] }]}
       />
 
       <View style={styles.profileCard}>
-        <Image
-          source={{ uri: "https://i.pravatar.cc/150?img=5" }}
-          style={styles.avatar}
-        />
+        <Image source={{ uri: "https://i.pravatar.cc/150?img=5" }} style={styles.avatar} />
         <View style={{ flex: 1, marginLeft: 10 }}>
           <Text style={styles.welcomeText}>Welcome back!</Text>
           <Text style={styles.userName}>{userName}</Text>
 
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => navigation.navigate("EditProfile")}
-          >
+          <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate("EditProfile")}>
             <Text style={styles.editText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
@@ -134,9 +142,7 @@ export default function DashboardScreen() {
           {pets.map((pet) => (
             <TouchableOpacity
               key={pet.id}
-              onPress={() =>
-                navigation.navigate("PetProfile", { petId: pet.id })
-              }
+              onPress={() => navigation.navigate("PetProfile", { petId: pet.id })}
               activeOpacity={0.8}
             >
               <View style={styles.petCard}>
@@ -166,9 +172,7 @@ export default function DashboardScreen() {
 
                 <TouchableOpacity
                   style={styles.detailsButton}
-                  onPress={() =>
-                    navigation.navigate("Graph", { petId: pet.id })
-                  }
+                  onPress={() => navigation.navigate("Graph", { petId: pet.id })}
                 >
                   <Text style={styles.detailsText}>See Details</Text>
                 </TouchableOpacity>
@@ -177,15 +181,19 @@ export default function DashboardScreen() {
           ))}
         </ScrollView>
 
-        <TouchableOpacity
-          style={styles.newPetButton}
-          onPress={() => navigation.navigate("AddPet")}
-        >
+        <TouchableOpacity style={styles.newPetButton} onPress={() => navigation.navigate("AddPet")}>
           <Text style={styles.newPetText}>New Pet</Text>
           <View style={styles.addIcon}>
             <Ionicons name="add" size={20} color="#fff" />
           </View>
         </TouchableOpacity>
+
+        {/* small background spinner for refreshes */}
+        {refreshing ? (
+          <View style={{ alignItems: "center", marginTop: 12 }}>
+            <ActivityIndicator size="small" color="#0B4F6C" />
+          </View>
+        ) : null}
       </View>
     </View>
   );

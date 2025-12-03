@@ -4,70 +4,98 @@ import {
   View,
   Text,
   TextInput,
-  Image,
   TouchableOpacity,
-  ScrollView,
+  Image,
   StyleSheet,
-  ActivityIndicator,
+  ScrollView,
+  Alert,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import api from "../api";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import api, { setAccessToken } from "../api";
 import { useAuth } from "../AuthContext";
 
-export default function EditPetProfile() {
+export default function EditPetProfileScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { petId } = route.params;
+
   const { accessToken } = useAuth();
+
+  // Set token for API instance
+  useEffect(() => {
+    if (accessToken) setAccessToken(accessToken);
+  }, [accessToken]);
 
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [imageUri, setImageUri] = useState(null);
+  const [dob, setDob] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch pet info
+  // Load pet data
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        const res = await api.get(`/pets/${petId}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        const res = await api.get(`/pets/${petId}`);
         setPet(res.data);
-        setImageUri(res.data.image || null);
+        setImageUri(res.data.img || null);
+
+        // parse DOB string to Date object if available
+        if (res.data.dob) {
+          const [month, day, year] = res.data.dob.split("/").map(Number);
+          setDob(new Date(year, month - 1, day));
+        }
       } catch (err) {
-        console.log(err);
+        console.log("Error loading pet:", err);
+        Alert.alert("Error", "Failed to load pet data.");
       } finally {
         setLoading(false);
       }
     };
     fetchPet();
-  }, [petId, accessToken]);
+  }, [petId]);
 
+  // Image picker
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
     });
-    if (!result.cancelled) setImageUri(result.uri);
+    if (!result.canceled) setImageUri(result.assets[0].uri);
   };
 
   const handleSave = async () => {
     if (!pet) return;
+    if (!dob) return Alert.alert("Error", "Date of birth is required.");
+
     setSaving(true);
     try {
       const formData = new FormData();
-      formData.append("name", pet.name);
-      formData.append("breed", pet.breed);
-      formData.append("sex", pet.sex);
-      formData.append("dob", pet.dob);
-      formData.append("weight", pet.weight);
+      formData.append("name", pet.name || "");
+      formData.append("breed", pet.breed || "");
+      formData.append("sex", pet.sex || "");
+      formData.append(
+        "dob",
+        dob
+          ? `${dob.getMonth() + 1}/${dob.getDate()}/${dob.getFullYear()}`
+          : ""
+      );
+      formData.append("weight", parseFloat(pet.weight) || 0);
 
-      if (imageUri && imageUri !== pet.image) {
+
+      if (imageUri && imageUri !== pet.img) {
         const filename = imageUri.split("/").pop();
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
-        formData.append("image", { uri: imageUri, name: filename, type });
+        const ext = filename.split(".").pop();
+        formData.append("image", {
+          uri: imageUri,
+          name: filename,
+          type: `image/${ext}`,
+        });
       }
 
       await api.put(`/pets/${petId}`, formData, {
@@ -77,156 +105,148 @@ export default function EditPetProfile() {
         },
       });
 
-      alert("Pet updated successfully!");
+      Alert.alert("Success", "Pet updated successfully!");
       navigation.goBack();
     } catch (err) {
-      console.log(err);
-      alert("Error updating pet.");
+      console.log("Error updating pet:", err.response?.data || err.message);
+      Alert.alert("Error", "Failed to update pet.");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#0B4F6C" />
-      </View>
-    );
-  }
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (selectedDate) setDob(selectedDate);
+  };
 
-  if (!pet) {
+  if (loading || !pet) {
     return (
-      <View style={styles.loaderContainer}>
-        <Text style={{ color: "#333" }}>Pet not found.</Text>
+      <View style={styles.loader}>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ color: "#0B4F6C", marginBottom: 10 }}>← Back</Text>
-        </TouchableOpacity>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backText}>←</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={pickImage}>
-          <Image
-            source={
-              imageUri
-                ? { uri: imageUri }
-                : require("../../assets/logo.png")
-            }
-            style={styles.avatar}
+          <Text style={styles.headerTitle}>Edit Pet</Text>
+          <View style={styles.headerArc} />
+
+          <View style={styles.petWrapper}>
+            <Image
+              source={{
+                uri: imageUri
+                  ? imageUri
+                  : "https://via.placeholder.com/120?text=Pet",
+              }}
+              style={styles.petImage}
+            />
+            <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
+              <Text style={{ fontWeight: "700" }}>✎</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.petType}>{pet.breed || "Pet"}</Text>
+        </View>
+
+        {/* Form */}
+        <View style={styles.form}>
+          <Text style={styles.label}>Pet's Name</Text>
+          <TextInput
+            style={styles.input}
+            value={pet.name}
+            onChangeText={(v) => setPet({ ...pet, name: v })}
           />
-        </TouchableOpacity>
 
-        <TextInput
-          style={styles.petNameInput}
-          value={pet.name}
-          onChangeText={(text) => setPet({ ...pet, name: text })}
-        />
-        <TextInput
-          style={styles.petInfoInput}
-          value={pet.age || ""}
-          onChangeText={(text) => setPet({ ...pet, age: text })}
-          placeholder="Age"
-        />
-        <TextInput
-          style={styles.petInfoInput}
-          value={pet.dob || ""}
-          onChangeText={(text) => setPet({ ...pet, dob: text })}
-          placeholder="DOB"
-        />
-      </View>
+          <Text style={styles.label}>Date of Birth</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text>
+              {dob
+                ? `${dob.getMonth() + 1}/${dob.getDate()}/${dob.getFullYear()}`
+                : "Select Date"}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={dob || new Date()}
+              mode="date"
+              display="default"
+              onChange={onChangeDate}
+              maximumDate={new Date()}
+            />
+          )}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pet Details</Text>
+          <Text style={styles.label}>Breed</Text>
+          <TextInput
+            style={styles.input}
+            value={pet.breed}
+            onChangeText={(v) => setPet({ ...pet, breed: v })}
+          />
 
-        <TextInput
-          style={styles.infoInput}
-          value={pet.breed || ""}
-          onChangeText={(text) => setPet({ ...pet, breed: text })}
-          placeholder="Breed"
-        />
-        <TextInput
-          style={styles.infoInput}
-          value={pet.sex || ""}
-          onChangeText={(text) => setPet({ ...pet, sex: text })}
-          placeholder="Sex"
-        />
-        <TextInput
-          style={styles.infoInput}
-          value={pet.weight || ""}
-          onChangeText={(text) => setPet({ ...pet, weight: text })}
-          placeholder="Weight"
-          keyboardType="numeric"
-        />
-      </View>
+          <Text style={styles.label}>Sex</Text>
+          <TextInput
+            style={styles.input}
+            value={pet.sex}
+            onChangeText={(v) => setPet({ ...pet, sex: v })}
+          />
 
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={handleSave}
-        disabled={saving}
-      >
-        {saving ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveText}>Save Changes</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+          <Text style={styles.label}>Weight (lbs)</Text>
+          <TextInput
+            style={styles.input}
+            value={String(pet.weight || "")}
+            keyboardType="numeric"
+            onChangeText={(v) => setPet({ ...pet, weight: v })}
+          />
+
+          <View style={styles.buttonsRow}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              <Text style={styles.saveText}>
+                {saving ? "Saving..." : "Save"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  header: { alignItems: "center", padding: 20 },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: "#B9BF1D",
-    marginBottom: 15,
-  },
-  petNameInput: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#0B4F6C",
-    marginBottom: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    width: 200,
-    textAlign: "center",
-  },
-  petInfoInput: {
-    fontSize: 16,
-    color: "#333",
-    marginBottom: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    width: 120,
-    textAlign: "center",
-  },
-
-  section: { paddingHorizontal: 20, marginTop: 20 },
-  sectionTitle: { fontSize: 20, fontWeight: "bold", color: "#0B4F6C", marginBottom: 10 },
-  infoInput: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-  },
-
-  saveButton: {
-    backgroundColor: "#0B4F6C",
-    padding: 15,
-    borderRadius: 20,
-    alignItems: "center",
-    margin: 20,
-  },
-  saveText: { color: "#fff", fontWeight: "600" },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  header: { paddingTop: 12, paddingBottom: 50, backgroundColor: "#fff", alignItems: "center" },
+  backButton: { position: "absolute", left: 16, top: 61, backgroundColor: "#A6C000", borderRadius: 12, paddingHorizontal: 15, paddingVertical: 10, zIndex: 10 },
+  backText: { fontSize: 18, fontWeight: "700" },
+  headerTitle: { marginTop: 50, backgroundColor: "#ffffff", paddingVertical: 6, paddingHorizontal: 172, borderRadius: 4, fontWeight: "700", fontSize: 18, zIndex: 5 },
+  headerArc: { position: "absolute", bottom: 10, left: 0, right: 0, height: 250, backgroundColor: "#1F6578", borderBottomLeftRadius: 200, borderBottomRightRadius: 200 },
+  petWrapper: { position: "absolute", bottom: 30, alignSelf: "center" },
+  petImage: { width: 110, height: 110, borderRadius: 75, borderWidth: 4, borderColor: "#F4A62A" },
+  editIcon: { position: "absolute", right: 6, bottom: 6, width: 30, height: 30, borderRadius: 15, backgroundColor: "#ffffff", alignItems: "center", justifyContent: "center" },
+  petType: { marginTop: 60, color: "#ffffff", fontSize: 22, fontWeight: "800", marginBottom: 10 },
+  form: { marginTop: 24, backgroundColor: "#ffffff", paddingHorizontal: 24, paddingBottom: 32 },
+  label: { fontWeight: "700", fontSize: 18, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 25, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 14, fontSize: 16 },
+  buttonsRow: { marginTop: 8, marginBottom: 36, flexDirection: "row", justifyContent: "flex-start" },
+  saveButton: { backgroundColor: "#16495B", paddingVertical: 14, paddingHorizontal: 30, borderRadius: 14 },
+  saveText: { color: "#ffffff", fontWeight: "700" },
 });

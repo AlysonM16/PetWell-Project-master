@@ -1,5 +1,4 @@
-// screens/PetProfile.js
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,35 +8,50 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../AuthContext";
 import api from "../api";
 
 export default function PetProfile() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { petId, petData } = route.params || {};
+  const { petId } = route.params || {};
   const { accessToken } = useAuth();
 
-  const [pet, setPet] = useState(petData || null);
-  const [loading, setLoading] = useState(!petData);
+  const [pet, setPet] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPet = async () => {
-      if (!petId || pet) return; // Already have data
-      try {
-        const res = await api.get(`/pets/${petId}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        setPet(res.data);
-      } catch (err) {
-        console.error("Error fetching pet:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPet();
-  }, [petId, pet, accessToken]);
+  // Format DOB like AddPet (MM/DD/YYYY)
+  const formatDob = (dobString) => {
+    if (!dobString) return "-";
+    const date = new Date(dobString);
+    if (isNaN(date)) return dobString; // fallback
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const fetchPet = async () => {
+        if (!petId) return;
+        setLoading(true);
+        try {
+          const res = await api.get(`/pets/${petId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (isActive) setPet(res.data);
+        } catch (err) {
+          console.error("Error fetching pet:", err);
+        } finally {
+          if (isActive) setLoading(false);
+        }
+      };
+
+      fetchPet();
+      return () => { isActive = false; };
+    }, [petId, accessToken])
+  );
 
   if (loading) {
     return (
@@ -57,24 +71,20 @@ export default function PetProfile() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
-      {/* Pet Avatar */}
       <View style={styles.avatarContainer}>
         <Image
-          source={
-            pet.image
-              ? { uri: pet.image }
-              : require("../../assets/icon.png")
-          }
+          source={pet.img ? { uri: pet.img } : require("../../assets/icon.png")}
           style={styles.avatar}
         />
       </View>
 
-      {/* Pet Info Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Pet Information</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate("EditPetProfile", { pet })}
+            onPress={() =>
+              navigation.navigate("EditPetProfile", { petId: pet.id })
+            }
           >
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
@@ -97,7 +107,7 @@ export default function PetProfile() {
 
         <View style={styles.infoRow}>
           <Text style={styles.label}>Date of Birth</Text>
-          <Text style={styles.value}>{pet.dob || "-"}</Text>
+          <Text style={styles.value}>{formatDob(pet.dob)}</Text>
         </View>
 
         <View style={styles.infoRow}>
@@ -106,7 +116,6 @@ export default function PetProfile() {
         </View>
       </View>
 
-      {/* Graph Button */}
       <TouchableOpacity
         style={styles.graphButton}
         onPress={() => navigation.navigate("Graph", { petId: pet.id })}
@@ -114,7 +123,6 @@ export default function PetProfile() {
         <Text style={styles.graphText}>View Lab Records</Text>
       </TouchableOpacity>
 
-      {/* Notes Section */}
       <View style={styles.notesBox}>
         <Text style={styles.notesPlaceholder}>{pet.notes || "Notes"}</Text>
       </View>
@@ -124,43 +132,18 @@ export default function PetProfile() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-
   avatarContainer: { alignItems: "center", marginBottom: 20 },
   avatar: { width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: "#0B4F6C" },
-
-  card: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-    elevation: 3,
-  },
+  card: { backgroundColor: "#f9f9f9", borderRadius: 12, padding: 15, marginBottom: 20, elevation: 3 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   cardTitle: { fontSize: 16, fontWeight: "600" },
-  editText: { color: "#007bff" },
-
+  editText: { color: "#98eb08ff"},
   infoRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 6 },
   label: { color: "#555", fontWeight: "500" },
   value: { fontWeight: "500" },
-
-  graphButton: {
-    backgroundColor: "#0B4F6C",
-    padding: 15,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 20,
-  },
+  graphButton: { backgroundColor: "#0B4F6C", padding: 15, borderRadius: 12, alignItems: "center", marginBottom: 20 },
   graphText: { color: "#fff", fontWeight: "600" },
-
-  notesBox: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 30,
-  },
+  notesBox: { width: "100%", borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 15, marginBottom: 30 },
   notesPlaceholder: { color: "#aaa" },
 });
