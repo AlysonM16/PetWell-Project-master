@@ -19,7 +19,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") or "dummy_key_for_local_testing"
 genai.configure(api_key=GOOGLE_API_KEY)
 
 
-def extract_data_from_pdf(file_path: str) -> dict:
+def extract_data_from_pdf(file_path: str,  petId: int, original_filename: str) -> dict:
     """
     Extract lab data from PDF and submit to Gemini API.
     Returns a parsed JSON dict.
@@ -27,6 +27,7 @@ def extract_data_from_pdf(file_path: str) -> dict:
 
     # --- Convert PDF to markdown text ---
     md_text = pymupdf4llm.to_markdown(file_path)
+    petId = petId
 
     if md_text.strip():
         markdown_text = md_text
@@ -47,14 +48,14 @@ def extract_data_from_pdf(file_path: str) -> dict:
         markdown_text = "".join(pages_text)
 
     # --- Save markdown to temporary file ---
-    tmp_path = "markdown_file.md"
+    tmp_path = "markdown.md"
     with open(tmp_path, "w", encoding="utf-8") as f:
         f.write(markdown_text)
         f.flush()
         os.fsync(f.fileno())
 
     # --- Prompt for Gemini ---
-    prompt = """
+    prompt = f"""
 You are an expert medical data extraction assistant. 
 Analyze the attached PDF lab report accurately.
 
@@ -66,24 +67,25 @@ Also include a 'notes' field with important warnings (max 150 chars).
 Output must be ONLY a single valid JSON object.
 
 Schema:
-{
+{{
+  "petId": {petId},
   "visits": [
-    {
+    {{
       "visit_date": "YYYY-MM-DD",
       "records": [
-        {
+        {{
           "test_name": "string",
           "value": "float or string",
           "unit": "string",
           "reference_range": "string"
-        }
+        }}
       ],
       "notes": "Note 1, Note 2, ..."
-    }
+    }}
   ]
-}
+}}
 
-If the date is not found, use "unknown".
+If the visit date is not found, use "unknown".
 """
 
     start_time = time.time()
@@ -115,10 +117,13 @@ If the date is not found, use "unknown".
 
         # Attempt JSON parse
         try:
-            return json.loads(text)
+            extracted_json = json.loads(text)
         except json.JSONDecodeError:
             repaired = json_repair.repair_json(text)
-            return json.loads(repaired)
+            extracted_json = json.loads(repaired)
+        
+        
+        
 
     except Exception as e:
         raise Exception(f"PDF processing failed: {str(e)}")
@@ -126,6 +131,16 @@ If the date is not found, use "unknown".
     finally:
         elapsed = time.time() - start_time
         print(f"PDF extraction for {file_path} took {elapsed:.2f} seconds")
+        base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Files", "Converted_JSONs")
+        pet_folder = os.path.join(base_dir, str(petId))
+        os.makedirs(pet_folder, exist_ok=True)
+
+        # --- Save JSON to file ---
+        json_filename = original_filename + ".json"
+        json_path = os.path.join(pet_folder, json_filename)
+        with open(json_path, "w", encoding="utf-8") as jf:
+            json.dump(extracted_json, jf, indent=2)
+
 
         # --- Safely delete temp markdown file ---
         if os.path.exists(tmp_path):
