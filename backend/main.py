@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, APIRouter
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, APIRouter, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -39,9 +39,12 @@ async def read_root():
 
 # PDF processing
 @app.post("/process-pdf")
-async def process_pdf(file: UploadFile = File(...)):
+async def process_pdf(file: UploadFile = File(...), petId : int = Form(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="File must be a PDF")
+
+    original_filename = file.filename
+    original_filename = os.path.splitext(original_filename)[0]
 
     contents = await file.read()
     max_size = 10 * 1024 * 1024
@@ -53,7 +56,7 @@ async def process_pdf(file: UploadFile = File(...)):
         temp_file_path = temp_file.name
 
     try:
-        extracted_data = extract_data_from_pdf(temp_file_path)
+        extracted_data = extract_data_from_pdf(temp_file_path, petId, original_filename)
         return JSONResponse(status_code=200, content=extracted_data)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Failed to decode JSON from LLM response.")
@@ -104,5 +107,3 @@ def update_pet(
     if not pet or pet.owner_id != current_user.id:
         raise HTTPException(status_code=404, detail="Pet not found or not authorized")
     return pet
-
-
