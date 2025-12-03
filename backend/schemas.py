@@ -1,11 +1,9 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-
-# -------- USERS --------
 class UserBase(BaseModel):
     name: str
     email: EmailStr
-
+    phone: str | None = None  
 class UserCreate(UserBase):
     password: str
 
@@ -16,13 +14,15 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
-
+class UserUpdate(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    password: str | None = None
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
-
-# -------- PETS --------
 class PetBase(BaseModel):
     name: str
     breed: Optional[str] = None
@@ -49,10 +49,9 @@ class PetOut(PetBase):
     model_config = {
         "from_attributes": True
     }
-# User with pets
 class UserWithPets(UserOut):
     pets: List[PetOut] = []
-
+    phone: Optional[str] = None 
     model_config = {
         "from_attributes": True
     }

@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User, Pet
-from ..schemas import UserCreate, UserOut, TokenPair, UserWithPets, PetOut
+from ..schemas import UserCreate, UserOut, TokenPair, UserWithPets, PetOut, BaseModel, UserUpdate
 from ..security import hash_password, verify_password, make_token, parse_token, get_current_user
 from ..config import settings
 from pydantic import BaseModel
@@ -78,14 +78,47 @@ def logout(payload: RefreshIn, db: Session = Depends(get_db)):
             db.commit()
     return {"ok": True}
 
-# Current user info (with pets)
 @router.get("/me", response_model=UserWithPets)
 def read_current_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    # Convert ORM pets to PetOut
     pets_list = [PetOut.from_orm(p) for p in current_user.pets]
     return UserWithPets(
         id=current_user.id,
         name=current_user.name,
         email=current_user.email,
+        phone=current_user.phone,
         pets=pets_list
     )
+@router.put("/me", response_model=UserOut)
+def update_current_user(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    updated = False
+
+    if payload.name:
+        current_user.name = payload.name
+        updated = True
+
+    if payload.email and payload.email != current_user.email:
+        email_lower = payload.email.lower()
+        if db.query(User).filter(User.email == email_lower, User.id != current_user.id).first():
+            raise HTTPException(400, "Email already in use")
+        current_user.email = email_lower
+        current_user.token_version += 1
+        updated = True
+
+    if payload.password:
+        current_user.hashed_password = hash_password(payload.password)
+        current_user.token_version += 1
+        updated = True
+
+    if payload.phone is not None: 
+        current_user.phone = payload.phone
+        updated = True
+
+    if updated:
+        db.commit()
+        db.refresh(current_user)
+
+    return current_user

@@ -6,21 +6,18 @@ import { getRefresh, saveRefresh, clearTokens } from "./storage";
 const ENV_BASE =
   (Constants?.expoConfig?.extra || {}).EXPO_PUBLIC_API_BASE_URL ||
   process.env.EXPO_PUBLIC_API_BASE_URL;
-const API_BASE_URL = ENV_BASE || "http://10.203.90.203:8000";
+const API_BASE_URL = ENV_BASE || "http://10.203.93.9:8000";
 
-// Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 25000,
 });
 
-// Access token management
 let accessToken = null;
 export const setAccessToken = (token) => {
   accessToken = token;
 };
 
-// Request interceptor to add auth header
 api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers = config.headers || {};
@@ -42,7 +39,7 @@ async function refreshAccessToken() {
   return newAccess;
 }
 
-// Response interceptor to handle 401 and refresh
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -68,9 +65,6 @@ api.interceptors.response.use(
   }
 );
 
-// --- Helper functions ---
-
-// Get all pets
 export const getPets = async () => {
   if (!accessToken) throw new Error("No access token set");
   const res = await api.get("/pets", {
@@ -79,7 +73,6 @@ export const getPets = async () => {
   return res.data;
 };
 
-// Get pet by ID
 export const getPetById = async (id) => {
   if (!accessToken) throw new Error("No access token set");
   const res = await api.get(`/pets/${id}`, {
@@ -88,5 +81,4 @@ export const getPetById = async (id) => {
   return res.data;
 };
 
-// Export default axios instance
 export default api;

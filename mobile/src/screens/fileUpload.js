@@ -36,7 +36,7 @@ export default function FileUploadScreen() {
       });
 
       setUploading(true);
-      const backendIP = "10.203.90.203";
+      const backendIP = "10.203.93.9";
 
       const res = await axios.post(`http://${backendIP}:8000/process-pdf`, formData, {
         headers: { "Content-Type": "multipart/form-data" },

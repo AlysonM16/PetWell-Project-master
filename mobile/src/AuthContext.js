@@ -1,4 +1,3 @@
-// src/AuthContext.js
 import React, { createContext, useContext, useState } from "react";
 import api from "./api";
 
@@ -18,7 +17,6 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      // FastAPI OAuth2 uses "username"
       const form = new URLSearchParams();
       form.append("username", email.trim());
       form.append("password", password);
@@ -33,14 +31,12 @@ export function AuthProvider({ children }) {
       setAccessToken(access_token);
       setRefreshToken(refresh_token);
 
-      // Fetch current user with fresh token
       const meRes = await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${access_token}` },
       });
 
       setUser(meRes.data);
     } catch (err) {
-      //console.error("Login failed:", err?.response?.data || err.message);
       setUser(null);
       setAccessToken(null);
       setRefreshToken(null);
@@ -59,9 +55,7 @@ export function AuthProvider({ children }) {
         email: email.trim(),
         password,
       });
-
-      // auto-login after registration
-      await login(email, password);
+      await login(email, password); // auto-login
     } catch (err) {
       console.error("Register failed:", err?.response?.data || err.message);
       throw err;
@@ -77,10 +71,14 @@ export function AuthProvider({ children }) {
     setRefreshToken(null);
   };
 
+  // ✅ Expose setUser so screens can update the global user
   const value = {
     user,
+    setUser,
     accessToken,
+    setAccessToken,
     refreshToken,
+    setRefreshToken,
     loading,
     login,
     register,
