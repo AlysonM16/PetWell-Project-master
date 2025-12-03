@@ -34,6 +34,8 @@ function HomeStack() {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="EditPetProfile" component={EditPetProfileScreen} />
       <Stack.Screen name="Graph" component={GraphScreen} />
+      <Stack.Screen name="fileUpload" component={FileUploadScreen} />
+      
     </Stack.Navigator>
   );
 }
