@@ -118,6 +118,13 @@ export default function PetProfile() {
 
       <TouchableOpacity
         style={styles.graphButton}
+        onPress={() => navigation.navigate("fileUpload", { petId: pet.id })}
+      >
+        <Text style={styles.graphText}>Upload Files</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.graphButton}
         onPress={() => navigation.navigate("Graph", { petId: pet.id })}
       >
         <Text style={styles.graphText}>View Lab Records</Text>
