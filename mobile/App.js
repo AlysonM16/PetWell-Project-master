@@ -65,9 +65,6 @@ function MainTabs() {
             case "AllFiles":
               iconName = "folder-outline";
               break;
-            case "Upload":
-              iconName = "cloud-upload-outline";
-              break;
             case "Logout":
               iconName = "log-out-outline";
               break;
@@ -81,8 +78,6 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="AllFiles" component={LabRecords} />
-      <Tab.Screen name="Upload" component={FileUploadScreen} />
-
       {/* Logout Tab */}
       <Tab.Screen
         name="Logout"

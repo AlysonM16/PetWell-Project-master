@@ -128,7 +128,7 @@ If the visit date is not found, use "unknown".
     except Exception as e:
         raise Exception(f"PDF processing failed: {str(e)}")
 
-    finally:
+    finally:#Put in here, refresh
         elapsed = time.time() - start_time
         print(f"PDF extraction for {file_path} took {elapsed:.2f} seconds")
         base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Files", "Converted_JSONs")
