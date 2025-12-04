@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, APIRouter, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, APIRouter, Form, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -8,7 +8,7 @@ from typing import List
 
 from .routers import pets
 
-from .llm_parser import extract_data_from_pdf
+from .llm_parser import extract_data_from_pdf, insert_extracted_labs_to_db
 from .database import Base, engine, get_db
 from . import models, schemas
 from .routers.auth import router as auth_router
@@ -39,7 +39,7 @@ async def read_root():
 
 # PDF processing
 @app.post("/process-pdf")
-async def process_pdf(file: UploadFile = File(...), petId : int = Form(...)):
+async def process_pdf(file: UploadFile = File(...), petId : int = Form(...), db: Session = Depends(get_db)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="File must be a PDF")
 
@@ -67,7 +67,6 @@ async def process_pdf(file: UploadFile = File(...), petId : int = Form(...)):
                     detail="extract_data_from_pdf returned non-JSON string",
                 )
         else:
-            # assume it's already a dict
             json_data = extracted_data
 
         # Write JSON data
@@ -149,3 +148,31 @@ def update_pet(
     if not pet or pet.owner_id != current_user.id:
         raise HTTPException(status_code=404, detail="Pet not found or not authorized")
     return pet
+
+@app.get("/api/labs")
+def get_labs(petId: int = Query(...), db: Session = Depends(get_db)):
+    # Fetch labs for this pet
+    labs = db.query(models.Lab).filter(models.Lab.pet_id == petId).all()
+    if not labs:
+        raise HTTPException(status_code=404, detail="No labs found for this pet")
+
+    result = {"petId": petId, "visits": []}
+
+    for lab in labs:
+        visit = {
+            "visit_date": lab.visit_date.isoformat() if lab.visit_date else "unknown",
+            "records": [],
+            "notes": getattr(lab, "notes", "")
+        }
+        for test in lab.tests:
+            visit["records"].append({
+                "test_name": test.test_name,
+                "value": test.value,
+                "unit": test.unit,
+                "reference_range": test.reference_range
+            })
+        result["visits"].append(visit)
+
+    result["visits"].sort(key=lambda x: x["visit_date"] or "")
+    return result
+
