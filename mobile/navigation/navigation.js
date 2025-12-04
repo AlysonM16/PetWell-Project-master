@@ -28,6 +28,7 @@ function HomeStack() {
       <Stack.Screen name="AddPet" component={AddPetScreen} />
       <Stack.Screen name="PetProfile" component={PetProfileScreen} />
       <Stack.Screen name="Graph" component={GraphScreen} />
+      <Stack.Screen name="fileUpload" component={FileUploadScreen} />
     </Stack.Navigator>
   );
 }
@@ -88,6 +89,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen name="fileUpload" component={FileUploadScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
