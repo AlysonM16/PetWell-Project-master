@@ -10,6 +10,7 @@ from PIL import Image
 import fitz  # PyMuPDF
 import pymupdf4llm
 
+
 # --- Ensure pytesseract points to Tesseract executable ---
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -29,7 +30,8 @@ def extract_data_from_pdf(file_path: str,  petId: int, original_filename: str) -
     md_text = pymupdf4llm.to_markdown(file_path)
     petId = petId
 
-    if md_text.strip():
+
+    if any(not c.isspace() for c in md_text):
         markdown_text = md_text
     else:
         # Fallback: OCR all pages
@@ -46,6 +48,7 @@ def extract_data_from_pdf(file_path: str,  petId: int, original_filename: str) -
                     pages_text.append(f"# Page {i + 1}\n\n{text.strip()}\n\n---\n\n")
 
         markdown_text = "".join(pages_text)
+
 
     # --- Save markdown to temporary file ---
     tmp_path = "markdown.md"
@@ -148,3 +151,4 @@ If the visit date is not found, use "unknown".
                 os.remove(tmp_path)
             except Exception as e:
                 print(f"Could not delete temp file {tmp_path}: {e}")
+    return extracted_json
