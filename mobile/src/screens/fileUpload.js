@@ -38,13 +38,14 @@ export default function FileUploadScreen() {
       formData.append("petId", petId);
 
       setUploading(true);
-      const backendIP = "10.203.93.9";
+      const backendIP = "192.168.1.157";
 
       const res = await axios.post(`http://${backendIP}:8000/process-pdf`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       console.log("Upload success!");
+      navigation.navigate("LabResults", { report: res.data });
       Alert.alert("Success", "File uploaded successfully!");
     } catch (err) {
       console.error("Upload error:", err.message || err);
