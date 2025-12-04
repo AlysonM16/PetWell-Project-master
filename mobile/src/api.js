@@ -6,7 +6,7 @@ import { getRefresh, saveRefresh, clearTokens } from "./storage";
 const ENV_BASE =
   (Constants?.expoConfig?.extra || {}).EXPO_PUBLIC_API_BASE_URL ||
   process.env.EXPO_PUBLIC_API_BASE_URL;
-const API_BASE_URL = ENV_BASE || "http://10.203.93.9:8000";
+const API_BASE_URL = ENV_BASE || "http://192.168.1.157:8000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -79,6 +79,20 @@ export const getPetById = async (id) => {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return res.data;
+};
+
+export const getUserFiles = async () => {
+  if (!accessToken) throw new Error("No access token set");
+
+  try {
+    const res = await api.get("/auth/files/user", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.data; 
+  } catch (err) {
+    console.error("Error fetching user files:", err);
+    throw err;
+  }
 };
 
 export default api;
