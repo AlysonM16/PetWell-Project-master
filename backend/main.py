@@ -57,16 +57,58 @@ async def process_pdf(file: UploadFile = File(...), petId : int = Form(...)):
 
     try:
         extracted_data = extract_data_from_pdf(temp_file_path, petId, original_filename)
-        return JSONResponse(status_code=200, content=extracted_data)
+
+        if isinstance(extracted_data, str):
+            try:
+                json_data = json.loads(extracted_data)
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=500,
+                    detail="extract_data_from_pdf returned non-JSON string",
+                )
+        else:
+            # assume it's already a dict
+            json_data = extracted_data
+
+        # Write JSON data
+        try:
+            with open(temp_file_path, "w") as f:
+                json.dump(json_data, f, indent=4)
+        except Exception as e:
+            print("Error writing lab_data.txt:", e)
+            raise HTTPException(
+                status_code=500, detail="Failed to write lab_data.txt on server"
+            )
+
+        # Read back data
+        try:
+            with open(temp_file_path, "r") as f:
+                file_data = json.load(f)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500,
+                detail="Invalid JSON in new file after writing",
+            )
+        except FileNotFoundError:
+            raise HTTPException(
+                status_code=500,
+                detail="New file not found after writing",
+            )
+
+        # Return the JSON
+        return JSONResponse(status_code=200, content=file_data)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Failed to decode JSON from LLM response.")
     except Exception as e:
         print(f"Error processing PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )
     finally:
+        # Always clean up temp file
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-
+            
 # ------------------ Pets Router ------------------
 pets_router = APIRouter(prefix="/pets", tags=["pets"])
 
