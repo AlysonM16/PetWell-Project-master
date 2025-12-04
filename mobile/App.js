@@ -21,6 +21,7 @@ import EditProfileScreen from "./src/screens/EditProfile";
 import EditPetProfileScreen from "./src/screens/EditPetProfile";
 import WelcomeScreen from "./src/screens/WelcomeScreen";
 import GraphScreen from "./src/screens/graph";
+import LabResultsScreen from "./src/screens/LabResultsScreen";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -35,6 +36,7 @@ function HomeStack() {
       <Stack.Screen name="EditPetProfile" component={EditPetProfileScreen} />
       <Stack.Screen name="Graph" component={GraphScreen} />
       <Stack.Screen name="fileUpload" component={FileUploadScreen} />
+      <Stack.Screen name="LabResults" component={LabResultsScreen} />
       
     </Stack.Navigator>
   );
