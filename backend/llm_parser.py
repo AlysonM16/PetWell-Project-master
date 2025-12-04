@@ -5,10 +5,15 @@ import io
 import pytesseract
 import json_repair
 import google.generativeai as genai
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from PIL import Image
 import fitz  # PyMuPDF
 import pymupdf4llm
+from sqlalchemy.orm import Session
+from .database import SessionLocal
+from .models import Lab, LabTest
+import hashlib
 
 
 # --- Ensure pytesseract points to Tesseract executable ---
@@ -125,9 +130,6 @@ If the visit date is not found, use "unknown".
             repaired = json_repair.repair_json(text)
             extracted_json = json.loads(repaired)
         
-        
-        
-
     except Exception as e:
         raise Exception(f"PDF processing failed: {str(e)}")
 
@@ -151,4 +153,68 @@ If the visit date is not found, use "unknown".
                 os.remove(tmp_path)
             except Exception as e:
                 print(f"Could not delete temp file {tmp_path}: {e}")
+        db = SessionLocal()
+        
+        insert_extracted_labs_to_db(db, json_path, petId)
+    return extracted_json
+
+
+def insert_extracted_labs_to_db(db: Session, json_path: str, petId: int):
+    import json
+    pet_id = petId
+
+    # Load the JSON from file
+    with open(json_path, "r", encoding="utf-8") as f:
+        extracted_json = json.load(f)
+
+    visits = extracted_json.get("visits", [])
+    for visit in visits:
+        if not visit:
+            continue
+
+        visit_date_str = visit.get("visit_date")
+        if visit_date_str == "unknown" or visit_date_str is None:
+            visit_date = None
+        else:
+            visit_date = datetime.strptime(visit_date_str, "%Y-%m-%d").date()
+
+        # Compute hash of lab records to avoid duplicates
+        lab_json_str = str(sorted(visit.get("records", []), key=lambda x: x.get("test_name")))
+        lab_hash = hashlib.md5(lab_json_str.encode()).hexdigest()
+
+        # Check if a lab with same pet_id, visit_date, and PDF path exists
+        existing_lab = db.query(Lab).filter(
+            Lab.pet_id == pet_id,
+            Lab.visit_date == visit_date,
+            Lab.pdf_path == json_path
+        ).first()
+
+        if existing_lab:
+            print(f"Duplicate lab found for pet {pet_id} on {visit_date} with PDF {json_path}, skipping insert.")
+            continue
+
+        # Insert lab with PDF path
+        lab = Lab(
+            pet_id=pet_id,
+            visit_date=visit_date,
+            created_at=datetime.now(timezone.utc),
+            lab_hash=lab_hash,
+            pdf_path=json_path 
+        )
+        db.add(lab)
+        db.flush()  
+
+        for record in visit.get("records", []):
+            if not record:
+                continue
+            test = LabTest(
+                lab_id=lab.id,
+                test_name=record.get("test_name"),
+                value=record.get("value"),
+                unit=record.get("unit"),
+                reference_range=record.get("reference_range")
+            )
+            db.add(test)
+
+    db.commit()
     return extracted_json
