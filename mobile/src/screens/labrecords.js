@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,60 +7,102 @@ import {
   Image,
   TextInput,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-const pdfs = Array.from({ length: 10 }).map((_, i) => ({
-  id: i.toString(),
-  title: i % 2 === 0 ? `report_2943.pdf` : `invoice_2943.pdf`,
-  date: "2025-10-23",
-  size: "62.5Mb",
-}));
+import { getUserFiles } from "../api";
 
 export default function LabRecords() {
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
+
+useEffect(() => {
+  async function fetchFiles() {
+    try {
+      const data = await getUserFiles();
+
+      // Normalize backend data
+      const normalized = data.map((f) => ({
+        title: f.title || "Unknown File",
+        size: f.size,
+        path: f.path || null,
+        petId: f.petId,
+      }));
+
+      setFiles(normalized);
+    } catch (error) {
+      console.error("Error fetching user files:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchFiles();
+}, []);
+
+  const filteredFiles = files.filter((file) =>
+    file.title.toLowerCase().includes(searchText.toLowerCase())
+  );
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Files</Text>
       </View>
+
+      {/* Profile */}
       <View style={styles.profileWrapper}>
         <Image
           source={{ uri: "https://i.pravatar.cc/150?img=5" }}
           style={styles.profileImg}
         />
       </View>
+
+      {/* Search */}
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#aaa" />
-          <TextInput placeholder="Search" style={styles.searchInput} />
+          <TextInput
+            placeholder="Search"
+            style={styles.searchInput}
+            value={searchText}
+            onChangeText={setSearchText}
+          />
         </View>
         <TouchableOpacity style={styles.filterBtn}>
           <Ionicons name="filter" size={22} color="#444" />
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={pdfs}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
-        renderItem={({ item }) => (
-          <View style={styles.fileRow}>
-            <Image
-              source={require("../../assets/icon.png")}
-              style={styles.pdfIcon}
-            />
-            <View style={styles.fileInfo}>
-              <Text style={styles.fileTitle}>{item.title}</Text>
-              <Text style={styles.fileMeta}>
-                {item.date} • {item.size}
-              </Text>
+
+      {/* File List */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0C4A6E" style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={filteredFiles}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          renderItem={({ item }) => (
+            <View style={styles.fileRow}>
+              <Image
+                source={require("../../assets/icon.png")}
+                style={styles.pdfIcon}
+              />
+              <View style={styles.fileInfo}>
+                <Text style={styles.fileTitle}>{item.title}</Text>
+                <Text style={styles.fileMeta}>
+                  {item.size}
+                </Text>
+              </View>
+              <Ionicons name="ellipsis-vertical" size={20} color="#666" />
             </View>
-            <Ionicons name="ellipsis-vertical" size={20} color="#666" />
-          </View>
-        )}
-      />
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -70,7 +112,7 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: "#0C4A6E",
-    height: 150, 
+    height: 150,
     paddingTop: 10,
     paddingBottom: 15,
     alignItems: "center",
@@ -157,15 +199,4 @@ const styles = StyleSheet.create({
   fileTitle: { fontWeight: "600", fontSize: 15 },
 
   fileMeta: { color: "#777", marginTop: 2 },
-
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#0C4A6E",
-    paddingVertical: 14,
-  },
-
-  navItem: { alignItems: "center" },
-
-  navLabel: { color: "#fff", fontSize: 12, marginTop: 4 },
 });
