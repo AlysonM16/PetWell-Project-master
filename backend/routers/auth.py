@@ -7,6 +7,7 @@ from ..schemas import UserCreate, UserOut, TokenPair, UserWithPets, PetOut, Base
 from ..security import hash_password, verify_password, make_token, parse_token, get_current_user
 from ..config import settings
 from pydantic import BaseModel
+import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -122,3 +123,43 @@ def update_current_user(
         db.refresh(current_user)
 
     return current_user
+
+@router.get("/files/user")
+def get_user_files(current_user: User = Depends(get_current_user)):
+    """
+    Returns all JSON files for all pets associated with the current user.
+    Each file includes petId, title, and size in MB.
+    """
+    # Get all pet IDs for the user
+    pet_ids = [pet.id for pet in current_user.pets]
+    if not pet_ids:
+        return []
+
+    # Set base directory for uploaded JSONs
+    # Adjust path relative to project root
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_dir = os.path.join(project_root, "Files", "Converted_JSONs")
+
+    print("Base dir exists:", os.path.exists(base_dir), " -> ", base_dir)
+
+
+    all_files = []
+
+    for pet_id in pet_ids:
+        pet_folder = os.path.join(base_dir, str(pet_id))
+        if not os.path.exists(pet_folder):
+            continue
+
+        for filename in os.listdir(pet_folder):
+            if filename.lower().endswith(".json"):
+                filepath = os.path.join(pet_folder, filename)
+                stat = os.stat(filepath)
+                all_files.append({
+                    "petId": pet_id,
+                    "title": filename,
+                    "path": filepath,
+                    "date": stat.st_mtime,          
+                    "size": f"{stat.st_size / (1024*1024):.2f}Mb"
+                })
+
+    return all_files
