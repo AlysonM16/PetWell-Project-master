@@ -98,7 +98,6 @@ export function AuthProvider({ children }) {
     setAccessToken(null);
     setRefreshToken(null);
   
-    // Clear axios token and secure storage
     setApiAccessToken(null);
     await clearTokens();
   };
