@@ -16,7 +16,7 @@ export default function LabResultsScreen({ route }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Lab Results</Text>
-      <Text style={styles.subtitle}>Pet Data {report.petId ?? "-"}</Text>
+      <Text style={styles.subtitle}>Pet Data:</Text>
 
       {report.visits.map((visit, index) => (
         <View key={`${visit.visit_date}-${index}`} style={styles.visitCard}>
@@ -121,4 +121,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#0B4F6C",
   },
+
 });
