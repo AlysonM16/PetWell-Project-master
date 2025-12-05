@@ -40,16 +40,33 @@ export default function RegisterScreen({ navigation }) {
 
   const onRegister = async () => {
     if (!canSubmit) {
-      Alert.alert("Invalid input", "Fill all fields correctly.");
+      setError("Please fill all fields correctly.");
       return;
     }
+  
     setError("");
     setSubmitting(true);
+  
     try {
-      await register(name.trim(), email.trim(), password);
-      // AuthContext will log the user in and Root will navigate
-    } catch (e) {
-      setError(e?.response?.data?.detail || e.message || "Registration failed");
+      const result = await register(name.trim(), email.trim(), password);
+  
+      if (!result?.ok) {
+        // Stay on the same screen, just show the error.
+        setError(result.message || "Registration failed.");
+        return;
+      }
+  
+      // ---- SUCCESS ----
+      Alert.alert(
+        "Account created",
+        "Your account has been successfully created. Please log in.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.replace("Login"),
+          },
+        ]
+      );
     } finally {
       setSubmitting(false);
     }

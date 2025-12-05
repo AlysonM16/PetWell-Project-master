@@ -46,7 +46,9 @@ export default function LabRecords() {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Files</Text>
+        <View style={styles.headerTitleWrapper}>
+          <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>Files</Text>
+        </View>
       </View>
 
       <View style={styles.searchRow}>
@@ -86,9 +88,37 @@ export default function LabRecords() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
-  header: { backgroundColor: "#0C4A6E", height: 140, paddingTop: 10, alignItems: "center", justifyContent: "center" },
-  backBtn: { position: "absolute", left: 17, top: 50, backgroundColor: "#A6C000", borderRadius: 12, paddingHorizontal: 18, paddingVertical: 13, zIndex:10 },
-  headerTitle: { marginTop: 10, backgroundColor: "#fff", paddingVertical: 5, paddingHorizontal: 187, borderRadius: 4, fontWeight: "700", fontSize: 18 },
+  header: {
+    backgroundColor: "#0C4A6E",
+    height: 120,
+    paddingTop: 40,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  
+  backBtn: {
+    backgroundColor: "#A6C000",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  
+  headerTitleWrapper: {
+    flex: 1,                         // takes the rest of the row
+    marginLeft: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingVertical: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  
+  headerTitle: {
+    fontWeight: "700",
+    fontSize: 20,
+    color: "#0C4A6E",
+  },
   searchRow: { marginTop: 20, flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16, alignItems: "center" },
   searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", flex: 1, padding: 10, borderRadius: 8 },
   searchInput: { marginLeft: 8, flex: 1 },

@@ -16,7 +16,7 @@ export default function LabResultsScreen({ route }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Lab Results</Text>
-      <Text style={styles.subtitle}>Pet Data {report.petId ?? "-"}</Text>
+      <Text style={styles.subtitle}>Pet Data:</Text>
 
       {report.visits.map((visit, index) => (
         <View key={`${visit.visit_date}-${index}`} style={styles.visitCard}>
@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
+    alignItems: "flex-start",  // so multi-line cells align nicely
     borderBottomWidth: 1,
     borderColor: "#e5e5e5",
   },
@@ -112,10 +113,12 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
+    minWidth: 0,               // important for flex text wrapping in a row
     paddingVertical: 8,
     paddingHorizontal: 6,
     fontSize: 14,
     color: "#222",
+    flexShrink: 1,             // allow cell to shrink instead of overflowing
   },
   headerCell: {
     fontWeight: "700",

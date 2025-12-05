@@ -6,7 +6,7 @@ import { getRefresh, saveRefresh, clearTokens } from "./storage";
 const ENV_BASE =
   (Constants?.expoConfig?.extra || {}).EXPO_PUBLIC_API_BASE_URL ||
   process.env.EXPO_PUBLIC_API_BASE_URL;
-const API_BASE_URL = ENV_BASE || "http://10.203.93.9:8000";
+const API_BASE_URL = ENV_BASE || "http://192.168.1.6:8000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

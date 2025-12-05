@@ -32,7 +32,7 @@ export default function FileUploadScreen() {
       formData.append("petId", petId);
 
       setUploading(true);
-      const backendIP = "10.203.93.9";
+      const backendIP = "192.168.1.6";
 
       const res = await axios.post(`http://${backendIP}:8000/process-pdf`, formData, { headers: { "Content-Type": "multipart/form-data" } });
 

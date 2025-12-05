@@ -1,0 +1,347 @@
+{
+  "petId": 7,
+  "visits": [
+    {
+      "visit_date": "unknown",
+      "records": [
+        {
+          "test_name": "TOTAL PROTEIN",
+          "value": 5.9,
+          "unit": "g/dL",
+          "reference_range": "5.0-7.4 g/dL"
+        },
+        {
+          "test_name": "ALBUMIN",
+          "value": 3.3,
+          "unit": "g/dL",
+          "reference_range": "2.7-4.4 g/dL"
+        },
+        {
+          "test_name": "GLOBULIN",
+          "value": 2.6,
+          "unit": "g/dL",
+          "reference_range": "1.6-3.6 g/dL"
+        },
+        {
+          "test_name": "A/G RATIO",
+          "value": 1.3,
+          "unit": "",
+          "reference_range": "0.8-2.0"
+        },
+        {
+          "test_name": "AST (SGOT)",
+          "value": 21,
+          "unit": "IU/L",
+          "reference_range": "15-66 IU/L"
+        },
+        {
+          "test_name": "ALT (SGPT)",
+          "value": 80,
+          "unit": "IU/L",
+          "reference_range": "12-118 IU/L"
+        },
+        {
+          "test_name": "Alk Phosphatase",
+          "value": 123,
+          "unit": "IU/L",
+          "reference_range": "5-131 IU/L"
+        },
+        {
+          "test_name": "Total Bilirubin",
+          "value": 0.1,
+          "unit": "mg/dL",
+          "reference_range": "0.1-0.3 mg/dL"
+        },
+        {
+          "test_name": "BUN",
+          "value": 20,
+          "unit": "mg/dL",
+          "reference_range": "6-31 mg/dL"
+        },
+        {
+          "test_name": "Creatinine",
+          "value": 1.4,
+          "unit": "mg/dL",
+          "reference_range": "0.5-1.6 mg/dL"
+        },
+        {
+          "test_name": "SDMA",
+          "value": 12.9,
+          "unit": "UG/dL",
+          "reference_range": "<14.0 UG/dL"
+        },
+        {
+          "test_name": "BUN/CREAT RATIO",
+          "value": 14,
+          "unit": "",
+          "reference_range": "4-27"
+        },
+        {
+          "test_name": "PHOSPHORUS",
+          "value": 3.0,
+          "unit": "mg/dL",
+          "reference_range": "2.5-6.0 mg/dL"
+        },
+        {
+          "test_name": "Glucose",
+          "value": 83,
+          "unit": "mg/dL",
+          "reference_range": "70-138 mg/dL"
+        },
+        {
+          "test_name": "CALCIUM",
+          "value": 10.4,
+          "unit": "mg/dL",
+          "reference_range": "8.9-11.4 mg/dL"
+        },
+        {
+          "test_name": "CORRECTED CALCIUM",
+          "value": 10.6,
+          "unit": "",
+          "reference_range": ""
+        },
+        {
+          "test_name": "SODIUM",
+          "value": 147,
+          "unit": "mEq/L",
+          "reference_range": "139-154 mEq/L"
+        },
+        {
+          "test_name": "POTASSIUM",
+          "value": 5.1,
+          "unit": "mEq/L",
+          "reference_range": "3.6-5.5 mEq/L"
+        },
+        {
+          "test_name": "NA/K RATIO",
+          "value": 29,
+          "unit": "",
+          "reference_range": "27-38"
+        },
+        {
+          "test_name": "CHLORIDE",
+          "value": 112,
+          "unit": "mEq/L",
+          "reference_range": "102-120 mEq/L"
+        },
+        {
+          "test_name": "CHOLESTEROL",
+          "value": 307,
+          "unit": "mg/dL",
+          "reference_range": "92-324 mg/dL"
+        },
+        {
+          "test_name": "CPK",
+          "value": 40,
+          "unit": "IU/L",
+          "reference_range": "59-895 IU/L"
+        },
+        {
+          "test_name": "WBC",
+          "value": 7.5,
+          "unit": "103/mL",
+          "reference_range": "4.0-15.5 103/mL"
+        },
+        {
+          "test_name": "RBC",
+          "value": 6.3,
+          "unit": "106/mL",
+          "reference_range": "4.8-9.3 106/mL"
+        },
+        {
+          "test_name": "HGB",
+          "value": 13.6,
+          "unit": "g/dL",
+          "reference_range": "12.1-20.3 g/dL"
+        },
+        {
+          "test_name": "HCT",
+          "value": 41,
+          "unit": "%",
+          "reference_range": "36-60 %"
+        },
+        {
+          "test_name": "MCV",
+          "value": 66,
+          "unit": "fL",
+          "reference_range": "58-79 fL"
+        },
+        {
+          "test_name": "MCH",
+          "value": 21.7,
+          "unit": "pg",
+          "reference_range": "19-28 pg"
+        },
+        {
+          "test_name": "MCHC",
+          "value": 33,
+          "unit": "g/dL",
+          "reference_range": "30-38 g/dL"
+        },
+        {
+          "test_name": "Platelet Count",
+          "value": 692,
+          "unit": "103/mL",
+          "reference_range": "170-400 103/mL"
+        },
+        {
+          "test_name": "Platelet Estimate",
+          "value": "Increased",
+          "unit": "",
+          "reference_range": ""
+        },
+        {
+          "test_name": "Neutrophils",
+          "value": 70,
+          "unit": "%",
+          "reference_range": "60-77 %"
+        },
+        {
+          "test_name": "Bands",
+          "value": 0,
+          "unit": "%",
+          "reference_range": "0-3 %"
+        },
+        {
+          "test_name": "Lymphocytes",
+          "value": 20,
+          "unit": "%",
+          "reference_range": "12-30 %"
+        },
+        {
+          "test_name": "Monocytes",
+          "value": 6,
+          "unit": "%",
+          "reference_range": "3-10 %"
+        },
+        {
+          "test_name": "Eosinophils",
+          "value": 4,
+          "unit": "%",
+          "reference_range": "2-10 %"
+        },
+        {
+          "test_name": "Basophils",
+          "value": 0,
+          "unit": "%",
+          "reference_range": "0-1 %"
+        },
+        {
+          "test_name": "Absolute Neutrophils",
+          "value": 5250,
+          "unit": "/mL",
+          "reference_range": "2060-10600 /mL"
+        },
+        {
+          "test_name": "Absolute Lymphocytes",
+          "value": 1500,
+          "unit": "/mL",
+          "reference_range": "690-4500 /mL"
+        },
+        {
+          "test_name": "Absolute Monocytes",
+          "value": 450,
+          "unit": "/mL",
+          "reference_range": "0-840 /mL"
+        },
+        {
+          "test_name": "Absolute Eosinophils",
+          "value": 300,
+          "unit": "/mL",
+          "reference_range": "0-1200 /mL"
+        },
+        {
+          "test_name": "Absolute Basophils",
+          "value": 0,
+          "unit": "/mL",
+          "reference_range": "0-150 /mL"
+        },
+        {
+          "test_name": "T4",
+          "value": 2.0,
+          "unit": "mg/dL",
+          "reference_range": "0.8-3.5 mg/dL"
+        },
+        {
+          "test_name": "Specific Gravity",
+          "value": 1.019,
+          "unit": "",
+          "reference_range": "1.015-1.050"
+        },
+        {
+          "test_name": "pH",
+          "value": 5.5,
+          "unit": "",
+          "reference_range": "5.5-7.0"
+        },
+        {
+          "test_name": "Protein",
+          "value": "NEGATIVE",
+          "unit": "",
+          "reference_range": "NEGATIVE"
+        },
+        {
+          "test_name": "Glucose-Strip",
+          "value": "NEGATIVE",
+          "unit": "",
+          "reference_range": "NEGATIVE"
+        },
+        {
+          "test_name": "Ketones",
+          "value": "NEGATIVE",
+          "unit": "",
+          "reference_range": "NEGATIVE"
+        },
+        {
+          "test_name": "Bilirubin",
+          "value": "NEGATIVE",
+          "unit": "",
+          "reference_range": "NEG TO 1+"
+        },
+        {
+          "test_name": "Occult Blood",
+          "value": "NEGATIVE",
+          "unit": "",
+          "reference_range": "NEGATIVE"
+        },
+        {
+          "test_name": "WBC",
+          "value": "2-3",
+          "unit": "HPF",
+          "reference_range": "0-3 HPF"
+        },
+        {
+          "test_name": "RBC",
+          "value": "NONE",
+          "unit": "HPF",
+          "reference_range": "0-3 HPF"
+        },
+        {
+          "test_name": "Casts",
+          "value": "NONE SEEN",
+          "unit": "",
+          "reference_range": "Hyaline 0-3 LPF"
+        },
+        {
+          "test_name": "Crystals",
+          "value": "NONE SEEN",
+          "unit": "",
+          "reference_range": "HPF"
+        },
+        {
+          "test_name": "Bacteria",
+          "value": "NONE SEEN",
+          "unit": "",
+          "reference_range": "None Seen HPF"
+        },
+        {
+          "test_name": "Squamous Epithelia",
+          "value": "0-1",
+          "unit": "HPF",
+          "reference_range": "0-3 HPF"
+        }
+      ],
+      "notes": "Lipemia 1+. No significant analyte interference. Platelet count elevated. SDMA is slightly elevated."
+    }
+  ]
+}

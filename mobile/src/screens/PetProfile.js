@@ -135,7 +135,7 @@ export default function PetProfile() {
       {/* View Lab Results */}
       <TouchableOpacity
         style={styles.graphButton}
-        onPress={() => navigation.navigate("LabResults", { petId: pet.id })}
+        onPress={() => navigation.navigate("Graph", { petId: pet.id })}
       >
         <Text style={styles.graphText}>View Lab Results</Text>
       </TouchableOpacity>
