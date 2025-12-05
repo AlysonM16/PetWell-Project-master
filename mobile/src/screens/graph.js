@@ -49,7 +49,7 @@ export default function Graph({ route }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Pet {petId} Metrics</Text>
+      <Text style={styles.header}>Pet Metrics</Text>
 
       {dataSets.length > 0 ? (
         <Plotly
