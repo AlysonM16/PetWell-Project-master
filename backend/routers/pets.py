@@ -14,7 +14,7 @@ UPLOAD_DIR = "uploads/pets"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # CREATE PET
-@router.post("/", response_model=PetOut)
+@router.post("", response_model=PetOut)
 async def create_pet(
     name: str = Form(...),
     dob: Optional[str] = Form(None),
@@ -48,7 +48,7 @@ async def create_pet(
     return PetOut.from_orm(pet)
 
 # LIST PETS
-@router.get("/", response_model=List[PetOut])
+@router.get("", response_model=List[PetOut])
 def list_pets(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     pets = db.query(Pet).filter(Pet.owner_id == current_user.id).all()
     return [PetOut.from_orm(p) for p in pets]

@@ -45,4 +45,3 @@ yarn-error.*
 # generated native folders
 /ios
 /android
-sql_app.db

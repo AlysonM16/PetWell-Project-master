@@ -11,7 +11,7 @@ export default function Graph({ route }) {
   useEffect(() => {
     async function fetchLabData() {
       try {
-        const response = await fetch(`http://10.203.93.9:8000/api/labs?petId=${petId}`);
+        const response = await fetch(`http://192.168.1.6:8000/api/labs?petId=${petId}`);
         const json = await response.json();
 
         setLabData(json); 
@@ -49,7 +49,7 @@ export default function Graph({ route }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Pet Metrics</Text>
+      <Text style={styles.header}>Pet {petId} Metrics</Text>
 
       {dataSets.length > 0 ? (
         <Plotly

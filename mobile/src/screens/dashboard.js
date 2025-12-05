@@ -53,7 +53,7 @@ export default function DashboardScreen() {
   // Fetch lab data per pet and generate mini chart
   const fetchLabDataAndMiniChart = async (petId) => {
     try {
-      const response = await fetch(`http://10.203.93.9:8000/api/labs?petId=${petId}`);
+      const response = await fetch(`http://192.168.1.6:8000/api/labs?petId=${petId}`);
       const labData = await response.json();
 
       if (!labData || !labData.visits) return null;
