@@ -73,7 +73,7 @@ export default function PetProfile() {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
       <View style={styles.avatarContainer}>
         <Image
-          source={pet.img ? { uri: pet.img } : require("../../assets/icon.png")}
+          source={pet.img ? { uri: pet.img } : require("../../assets/paw.png")}
           style={styles.avatar}
         />
       </View>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: "#f9f9f9", borderRadius: 12, padding: 15, marginBottom: 20, elevation: 3 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   cardTitle: { fontSize: 16, fontWeight: "600" },
-  editText: { color: "#98eb08ff"},
+  editText: { color: "#B9BF1D"},
   infoRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 6 },
   label: { color: "#555", fontWeight: "500" },
   value: { fontWeight: "500" },

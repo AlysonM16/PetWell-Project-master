@@ -96,8 +96,7 @@ export default function EditProfileScreen({ navigation }) {
             <Text style={styles.headerTitle}>Edit Profile</Text>
             <View style={styles.avatarWrapper}>
               <Image
-                source={{ uri: "https://i.pravatar.cc/150?img=5" }}
-                style={styles.avatar}
+                source={require("../../assets/pfp.png") } style={styles.avatar}
               />
               <TouchableOpacity style={styles.editIcon}>
                 <Text style={{ fontWeight: "700" }}>✎</Text>

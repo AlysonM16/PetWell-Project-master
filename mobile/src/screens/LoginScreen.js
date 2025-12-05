@@ -46,7 +46,8 @@ export default function LoginScreen({ navigation }) {
     }
 
     // Success: navigate to Dashboard
-    navigation.replace("Dashboard");
+    navigation.navigate({ screen: "Dashboard" });
+
   };
 
   const canSubmit = emailValid && passValid && !loading;

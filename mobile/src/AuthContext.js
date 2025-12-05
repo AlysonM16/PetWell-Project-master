@@ -15,7 +15,6 @@ export function AuthProvider({ children }) {
 
   // ----- LOGIN -----
   const login = async (email, password) => {
-    setLoading(true);
     try {
       const form = new URLSearchParams();
       form.append("username", email.trim());
@@ -24,25 +23,25 @@ export function AuthProvider({ children }) {
 
       const res = await api.post("/auth/login", form, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        timeout: 5000,
       });
 
       const { access_token, refresh_token } = res.data;
-
       setAccessToken(access_token);
       setRefreshToken(refresh_token);
 
       const meRes = await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${access_token}` },
       });
-
       setUser(meRes.data);
+      return { ok: true };
     } catch (err) {
-      setUser(null);
-      setAccessToken(null);
-      setRefreshToken(null);
-      throw err;
-    } finally {
-      setLoading(false);
+      if (err?.response?.status === 401) {
+        const message = "Invalid credentials";
+        return { ok: false, message };
+      }
+      const fallback = err?.response?.data?.detail || "Something went wrong while logging in. Please try again.";
+      return { ok: false, message: fallback };
     }
   };
 
@@ -55,7 +54,7 @@ export function AuthProvider({ children }) {
         email: email.trim(),
         password,
       });
-      await login(email, password); // auto-login
+      await login(email, password); // auto-login after register
     } catch (err) {
       console.error("Register failed:", err?.response?.data || err.message);
       throw err;
@@ -71,7 +70,7 @@ export function AuthProvider({ children }) {
     setRefreshToken(null);
   };
 
-  // ✅ Expose setUser so screens can update the global user
+  // Expose Auth state and methods
   const value = {
     user,
     setUser,

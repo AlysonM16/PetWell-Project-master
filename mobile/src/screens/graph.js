@@ -11,7 +11,7 @@ export default function Graph({ route }) {
   useEffect(() => {
     async function fetchLabData() {
       try {
-        const response = await fetch(`http://192.168.1.157:8000/api/labs?petId=${petId}`);
+        const response = await fetch(`http://10.203.93.9:8000/api/labs?petId=${petId}`);
         const json = await response.json();
 
         setLabData(json); 

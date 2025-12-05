@@ -147,20 +147,11 @@ export default function EditPetProfileScreen() {
           <View style={styles.headerArc} />
 
           <View style={styles.petWrapper}>
-            <Image
-              source={{
-                uri: imageUri
-                  ? imageUri
-                  : "https://via.placeholder.com/120?text=Pet",
-              }}
-              style={styles.petImage}
-            />
+            <Image source={require("../../assets/paw.png")} style={styles.petImage} />
             <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
               <Text style={{ fontWeight: "700" }}>✎</Text>
             </TouchableOpacity>
           </View>
-
-          <Text style={styles.petType}>{pet.breed || "Pet"}</Text>
         </View>
 
         {/* Form */}
@@ -234,13 +225,13 @@ export default function EditPetProfileScreen() {
 
 const styles = StyleSheet.create({
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { paddingTop: 12, paddingBottom: 50, backgroundColor: "#fff", alignItems: "center" },
+  header: { paddingTop: 20, paddingBottom: 120, backgroundColor: "#fff", alignItems: "center" },
   backButton: { position: "absolute", left: 16, top: 61, backgroundColor: "#A6C000", borderRadius: 12, paddingHorizontal: 15, paddingVertical: 10, zIndex: 10 },
   backText: { fontSize: 18, fontWeight: "700" },
   headerTitle: { marginTop: 50, backgroundColor: "#ffffff", paddingVertical: 6, paddingHorizontal: 172, borderRadius: 4, fontWeight: "700", fontSize: 18, zIndex: 5 },
-  headerArc: { position: "absolute", bottom: 10, left: 0, right: 0, height: 250, backgroundColor: "#1F6578", borderBottomLeftRadius: 200, borderBottomRightRadius: 200 },
-  petWrapper: { position: "absolute", bottom: 30, alignSelf: "center" },
-  petImage: { width: 110, height: 110, borderRadius: 75, borderWidth: 4, borderColor: "#F4A62A" },
+  headerArc: { position: "absolute", bottom: 5, left: 0, right: 0, height: 250, backgroundColor: "#1F6578", borderBottomLeftRadius: 200, borderBottomRightRadius: 200 },
+  petWrapper: { position: "absolute", bottom: 10, alignSelf: "center" },
+  petImage: { width: 100, height: 100, borderRadius: 75, borderWidth: 4, borderColor: "#F4A62A" },
   editIcon: { position: "absolute", right: 6, bottom: 6, width: 30, height: 30, borderRadius: 15, backgroundColor: "#ffffff", alignItems: "center", justifyContent: "center" },
   petType: { marginTop: 60, color: "#ffffff", fontSize: 22, fontWeight: "800", marginBottom: 10 },
   form: { marginTop: 24, backgroundColor: "#ffffff", paddingHorizontal: 24, paddingBottom: 32 },
