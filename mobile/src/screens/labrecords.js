@@ -75,7 +75,6 @@ export default function LabRecords() {
                 <Text style={styles.fileTitle}>{item.title}</Text>
                 <Text style={styles.fileMeta}>{item.size}</Text>
               </View>
-              <Ionicons name="ellipsis-vertical" size={20} color="#666" />
             </View>
           )}
         />
